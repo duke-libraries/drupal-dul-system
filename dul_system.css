@@ -1,0 +1,30 @@
+.region-highlighted {
+	background-color: #E5EDDC;
+	border-top: 1px solid #BED1A1;
+	border-bottom: 1px solid #BED1A1;
+}
+
+.region-highlighted P,
+.region-highlighted H2,
+.region-highlighted H3 {
+	margin-left: 1.0em;
+	margin-right: 1.0em;
+}
+
+h1 {
+	color: #A1B70D !important;
+}
+
+/***** DASHBOARD overrides *****/
+#dashboard div#dashboard_main {
+	width: 73% !important;
+}
+#dashboard div#dashboard_sidebar {
+	width: 25% !important;
+}
+#dashboard input#edit-uid {
+	width: 300px !important;
+}
+#dashboard div#block-views-content-browsers-block-1 {
+	border: none !important;
+}

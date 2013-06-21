@@ -1,0 +1,107 @@
+<?php
+
+include_once 'dul_system.forms.inc';
+
+/**
+ * Implements hook_block_info()
+ */
+function dul_system_block_info() {
+	$blocks['welcome-loggedin'] = array(
+		'info' => t('Welcome Greeting to Logged-In Users'),
+		'cache' => DRUPAL_CACHE_GLOBAL,
+	);
+	$blocks['welcome-anonymous'] = array(
+		'info' => t('Welcome Greeting to Anonymous Users'),
+		'cache' => DRUPAL_CACHE_GLOBAL,
+	);
+
+	return $blocks;
+}
+
+/**
+ * Implements hook_block_view()
+ */
+function dul_system_block_view($delta) {
+	$block = array();
+
+	switch ($delta) {
+		case 'welcome-loggedin':
+			$block['content'] = theme('welcome-loggedin', array());
+			break;
+
+		case 'welcome-anonymous':
+			$block['content'] = theme('welcome-anonymous', array());
+			break;
+
+	}
+
+	return $block;
+}
+
+/**
+ * Implements hook_theme()
+ */
+function dul_system_theme() {
+	return array(
+		'welcome-loggedin' => array(
+			'template' => 'welcome-loggedin',
+		),
+		'welcome-anonymous' => array(
+			'template' => 'welcome-anonymous'
+		),
+	);
+}	
+
+/**
+ * Implements hook_block_view_alter for the 'powered-by' system block
+ */
+function dul_system_block_view_system_powered_by_alter(&$data, $block) {
+	watchdog('powered by', print_r($data, TRUE));
+}
+
+function dul_system_block_view_alter(&$data, $block) {
+	if ($block->module == 'system' && $block->delta == 'powered-by') {
+		$data['content'] = t('Powered by Duke University Libraries');
+	}
+	#if ($block->module == 'menu' && preg_match('/^menu-.+-menu$/', $block->delta)) {
+	#	dpm($data);
+	#}
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function dul_system_form_alter(&$form, &$form_state, $form_id) {
+	if ($form_id == 'shib_auth_custom_data' && isset($form['custom_username'])) {
+		watchdog('form_alter', print_r($form['custom_username'], TRUE));
+		// remove the #default_value from the 'custom_username' field,
+		// so as not to:
+		// 		1) confuse the end-user and 
+		//		2) force the end-user to complete the form
+		$form['custom_username']['#default_value'] = '';
+		$form['custom_username']['#description'] = t('Use the following format -- [firstname] [lastname].');
+		$form['custom_username']['#required'] = TRUE;
+	}
+	// Exit the function if user is not entering "node-based" content
+	if (!preg_match('/.+node_form$/', $form_id)) {
+		return;
+	}
+	$node_type = node_type_get_type($form_state['build_info']['args'][0]);
+	if (in_array($node_type->type, array('library_services_page', 'search_find_page', 'research_page', 'course_support_page', 'about_page'))) {
+		if (!isset($form_state['build_info']['args'][0]->nid)) {
+			drupal_set_title(t('New Page for "' . trim(preg_replace('/Page$/', '', $node_type->name)) . '"'));
+		} else {
+			drupal_set_title(t('Editing: ' . check_plain($form_state['build_info']['args'][0]->title)));
+		}
+	}
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function dul_system_menu_alter(&$items) {
+	if (isset($items['shib_auth/get_custom_data'])) {
+		$items['shib_auth/get_custom_data']['title'] = 'Customize Your Library User Name';
+	}
+	$items['node/add']['context'] = MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE;
+}

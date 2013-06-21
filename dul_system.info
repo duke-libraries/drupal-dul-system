@@ -1,0 +1,5 @@
+name = Duke Libraries System
+description = Module that (minimally) extends some 'system' level tasks
+core = 7.x
+package = Duke Libraries System
+stylesheets[all][] = dul_system.css
