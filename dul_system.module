@@ -87,7 +87,17 @@ function dul_system_form_alter(&$form, &$form_state, $form_id) {
 		return;
 	}
 	$node_type = node_type_get_type($form_state['build_info']['args'][0]);
-	if (in_array($node_type->type, array('library_services_page', 'search_find_page', 'research_page', 'course_support_page', 'about_page'))) {
+	$acceptable_types = array(
+		'library_services_page',
+		'search_find_page',
+		'research_page',
+		'course_support_page',
+		'about_page',
+		'lilly_library_page',
+		'music_library_page',
+	);
+	//if (in_array($node_type->type, array('library_services_page', 'search_find_page', 'research_page', 'course_support_page', 'about_page'))) {
+	if (in_array($node_type->type, $acceptable_types)) {
 		if (!isset($form_state['build_info']['args'][0]->nid)) {
 			drupal_set_title(t('New Page for "' . trim(preg_replace('/Page$/', '', $node_type->name)) . '"'));
 		} else {
