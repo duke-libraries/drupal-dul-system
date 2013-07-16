@@ -3,6 +3,45 @@
 include_once 'dul_system.forms.inc';
 
 /**
+ * Implements hook_menu()
+ */
+function dul_system_menu() {
+	return array(
+		'admin/config/library' => array(
+			'title' => 'Library Website Settings',
+			'description' => 'Adjust settings for this site within the Duke University Library Website platform',
+			'position' => 'right',
+			'weight' => -5,
+			'page callback' => 'system_admin_menu_block_page',
+			'access arguments' => array('administer site configuration'),
+			'file' => 'system.admin.inc',
+			'file path' => drupal_get_path('module', 'system'),
+		),
+		'admin/config/library/address' => array(
+			'title' => 'Library Address',
+			'description' => 'Set the address used in the footer of the website.',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('dul_system_address_settings'),
+			'access arguments' => array('administer site configuration'),
+			'type' => MENU_NORMAL_ITEM,
+			'file' => 'dul_system.admin.inc',
+		),
+	);
+}
+
+/**
+ * Implements hook_permission()
+ */
+function dul_system_permission() {
+	return array(
+		'administer dul configuration' => array(
+			'title' => t('Administer DUL System'),
+			'description' => t('Perform administration tasks for Duke Library System module'),
+		),
+	);
+}
+
+/**
  * Implements hook_block_info()
  */
 function dul_system_block_info() {
@@ -114,4 +153,16 @@ function dul_system_menu_alter(&$items) {
 		$items['shib_auth/get_custom_data']['title'] = 'Customize Your Library User Name';
 	}
 	$items['node/add']['context'] = MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE;
+}
+
+/**
+ * Implements hook_preprocessi()
+ *
+ * Add a variable named "library_address" that represents 
+ * the address stored in the dul_system.footer_address system variable
+ */
+function dul_system_preprocess(&$variables, $hook) {
+	if ($hook == 'region' && $variables['region'] == 'footer_contact') {
+		$variables['library_address'] = variable_get('dul_system.footer_address', '');
+	}
 }
