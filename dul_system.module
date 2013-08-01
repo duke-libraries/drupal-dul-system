@@ -26,6 +26,21 @@ function dul_system_menu() {
 			'type' => MENU_NORMAL_ITEM,
 			'file' => 'dul_system.admin.inc',
 		),
+		'admin/config/library/feeds' => array(
+			'title' => 'Miscellaneous Feed URLs',
+			'description' => 'Set the URLs for various feeds (e.g., Staff Directory)',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('dul_system_feed_settings'),
+			'access arguments' => array('administer site configuration'),
+			'type' => MENU_NORMAL_ITEM,
+			'file' => 'dul_system.admin.inc',
+		),
+		'staff/%' => array(
+			'page callback' => 'dul_system_staff_page',
+			'page arguments' => array(1),
+			'file' => 'dul_system.staff.inc',
+			'access callback' => TRUE,
+		),
 	);
 }
 
@@ -53,6 +68,10 @@ function dul_system_block_info() {
 		'info' => t('Welcome Greeting to Anonymous Users'),
 		'cache' => DRUPAL_CACHE_GLOBAL,
 	);
+	$blocks['library-alert'] = array(
+		'info' => t('Library Alert Message Block'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
 
 	return $blocks;
 }
@@ -72,9 +91,43 @@ function dul_system_block_view($delta) {
 			$block['content'] = theme('welcome-anonymous', array());
 			break;
 
+		case 'library-alert':
+			$block['content'] = filter_xss(variable_get('dul_system.alert_message'), '');
+			break;
 	}
 
 	return $block;
+}
+
+/**
+ * Implements hook_block_configure
+ */
+function dul_system_block_configure($delta) {
+	if ($delta != 'library-alert') {
+		return;
+	}
+	$form['alert_message'] = array(
+		'#type' => 'text_format',
+		'#title' => t('Alert Message for Home Page'),
+		'#description' => t('Enter a descriptive alert message for the home page'),
+		'#rows' => 5,
+		'#default_value' => variable_get('dul_system.alert_message', ''),
+	);
+
+	return $form;
+}
+
+/**
+ * Implements hook_block_save()
+ */
+function dul_system_block_save($delta = '', $edit = array()) {
+	switch ($delta) {
+		case 'library-alert':
+			variable_set('dul_system.alert_message', $edit['alert_message']);
+			break;
+	}
+
+	return;
 }
 
 /**
@@ -162,7 +215,18 @@ function dul_system_menu_alter(&$items) {
  * the address stored in the dul_system.footer_address system variable
  */
 function dul_system_preprocess(&$variables, $hook) {
+	$variables['library_address'] = '';
 	if ($hook == 'region' && $variables['region'] == 'footer_contact') {
 		$variables['library_address'] = variable_get('dul_system.footer_address', '');
 	}
 }
+
+/**
+ * Implements hook_cron()
+ */
+function dul_system_cron() {
+	$xslt = new XSLTProcessor();
+	$content = file_get_contents('http://library.duke.edu/apps/directory/cms/feed.xml');
+	print_r($content);
+}
+
