@@ -23,7 +23,7 @@ function dul_system_drush_command() {
 		'aliases' => array('drs', 'staff-update'),
 		
 		// this seems to be needed by drush
-		'bootstrap' => DRUSH_BOOTSTRAP_FULL,
+		'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_DATABASE,
 	);
 
 	return $items;
@@ -47,21 +47,56 @@ function drush_dul_system_dul_refresh_staff() {
 
 	// this serves as validation that we actually could read the file
 	// TODO: remove
-	drush_print_r($content);
+	//drush_print_r($content);
 
 	// delete (or truncate) the contents of the 'staff' table
+	$result = db_truncate('staff')->execute();
 
 	// process each node in the XML file
 	// NOTE -- will need to use SimpleXML object (see: http://php.net/manual/en/book.simplexml.php)
+
+	$persons = array();
+	try {
+		$xml = new SimpleXMLElement($content);
+	} catch(Exception $e) {
+		return drush_set_error('STAFF_REFRESH', dt($e->getMessage()));
+	}
+
+	// locate the <person> elements
+	$persons = $xml->xpath('/directory/staff/person');
 
 	// foreach node, create a stdClass object:
 	// example:
 	// $o = new stdClass();
 	// $o->firstname = "the value of the attribute that holds the 'firstname' in the xml data row";
 	// --> repeat for all data values
+	
+	foreach ($persons as $person) {
+		$sid = db_insert('staff')
+		->fields(array(
+			'netid' => (string) $person->netid,
+			'firstname' => (string) $person->firstname,
+			'lastname' => (string) $person->lastname,
+			'jobtitle' => (string) $person->title,
+			'displayname' => (string) $person->displayname,
+			'fullnamereversed' => (string) $person->fullnamereversed,
+			'address' => (string) $person->address,
+			'phone' => (string) $person->phone,
+			'phone2' => (string) $person->phone2,
+			'email' => (string) $person->email,
+			'email_privacy' => (string) $person->email_privacy,
+			'photo' => (string) $person->photo,
+			'url' => (string) $person->url,
+		))
+		->execute();
 
-	// then...
-	// db_write_record('staff', $o)
+		// then...
+		# $result = drupal_write_record('staff', $o);
+		if (!$sid) {
+			drush_print('error happened...');
+			drush_print_r(Database::getConnection());
+		}
+	}
 	// END foreach
 
 	// done. :)

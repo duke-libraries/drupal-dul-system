@@ -95,3 +95,12 @@ function dul_system_update_7110() {
 	);
 	db_create_table('staff', $schema['staff']);
 }
+
+function dul_system_update_7111() {
+	db_change_field('staff', 'jobtitle', 'jobtitle', array(
+		'type' => 'varchar',
+		'length' => 255,
+		'not null' => FALSE,
+		'default' => '',
+	));
+}
