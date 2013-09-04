@@ -35,13 +35,30 @@ function dul_system_menu() {
 			'type' => MENU_NORMAL_ITEM,
 			'file' => 'dul_system.admin.inc',
 		),
+		'staff' => array(
+			'page callback' => 'dul_system_staff_page',
+			'file' => 'dul_system.staff.inc',
+			'access callback' => TRUE,
+		),
 		'staff/%' => array(
 			'page callback' => 'dul_system_staff_page',
 			'page arguments' => array(1),
 			'file' => 'dul_system.staff.inc',
 			'access callback' => TRUE,
 		),
+		'whoops' => array(
+			'page callback' => 'dul_system_404',
+			'access callback' => TRUE
+		)
 	);
+}
+
+/**
+ * Generates the 404 response
+ */
+function dul_system_404() {
+	$output = print_r($_REQUEST);
+	return $output;
 }
 
 /**
@@ -227,6 +244,6 @@ function dul_system_preprocess(&$variables, $hook) {
 function dul_system_cron() {
 	$xslt = new XSLTProcessor();
 	$content = file_get_contents('http://library.duke.edu/apps/directory/cms/feed.xml');
-	print_r($content);
+	#print_r($content);
 }
 

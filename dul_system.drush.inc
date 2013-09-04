@@ -49,9 +49,6 @@ function drush_dul_system_dul_refresh_staff() {
 	// TODO: remove
 	//drush_print_r($content);
 
-	// delete (or truncate) the contents of the 'staff' table
-	$result = db_truncate('staff')->execute();
-
 	// process each node in the XML file
 	// NOTE -- will need to use SimpleXML object (see: http://php.net/manual/en/book.simplexml.php)
 
@@ -64,6 +61,12 @@ function drush_dul_system_dul_refresh_staff() {
 
 	// locate the <person> elements
 	$persons = $xml->xpath('/directory/staff/person');
+	if (empty($persons)) {
+		return drush_set_error('STAFF_REFRESH', t('Unable to read staff data -- persons array is empty.'));
+	}	
+
+	// delete (or truncate) the contents of the 'staff' table
+	$result = db_truncate('staff')->execute();
 
 	// foreach node, create a stdClass object:
 	// example:
