@@ -1,99 +1,61 @@
 <?php
 
 /**
- * Implements hook_update_N
+ * Implements hook_schmea
+ * 
  */
-function dul_system_update_7110() {
+function dul_system_schema() {
+	$schema = array();
 	$schema['staff'] = array(
 		// definition here
 		'description' => 'The base table for staff directory records',
 		'fields' => array(
-			'sid' => array(
-				'type' => 'serial',
-				'unsigned' => TRUE,
-				'not null' => TRUE,
-			),
-			'netid' => array(
-				'type' => 'varchar',
-				'length' => 15,
-				'not null' => TRUE,
-				'default' => '',
-			),
-			'firstname' => array(
-				'type' => 'varchar',
-				'length' => 35,
-				'not null' => TRUE,
-				'default' => '',
-			),
-			'lastname' => array(
-				'type' => 'varchar',
-				'length' => 35,
-				'not null' => TRUE,
-				'default' => '',
-			),
-			'displayname' => array(
-				'type' => 'varchar',
-				'length' => 70,
-				'not null' => TRUE,
-				'default' => '',
-			),
-			'fullnamereversed' => array(
-				'type' => 'varchar',
-				'length' => 70,
-				'not null' => FALSE,
-			),
-			'jobtitle' => array(
-				'type' => 'varchar',
-				'length' => 128,
-				'not null' => TRUE,
-				'default' => '',
-			),
-			'address' => array(
-				'type' => 'varchar',
-				'length' => 128,
-				'default' => '',
-			),
-			'phone' => array(
-				'type' => 'varchar',
-				'length' => 20,
-				'default' => '',
-			),
-			'phone2' => array(
-				'type' => 'varchar',
-				'length' => 20,
-				'default' => '',
-			),
-			'fax' => array(
-				'type' => 'varchar',
-				'length' => 20,
-				'default' => '',
-			),
-			'email' => array(
-				'type' => 'varchar',
-				'length' => 128,
-				'not null' => TRUE,
-				'default' => '',
-			),
-			'email_privacy' => array(
-				'type' => 'varchar',
-				'length' => 7,
-				'not null' => TRUE,
-				'default' => '',
-			),
-			'photo' => array(
-				'type' => 'varchar',
-				'length' => 255,
-				'default' => '',
-			),
-			'url' => array(
-				'type' => 'varchar',
-				'length' => 255,
-				'default' => '',
-			),
+			'sid' => array('type' => 'serial','unsigned' => TRUE,'not null' => TRUE,),
+			'person_id' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0,),
+			'netid' => array('type' => 'varchar','length' => 15,'not null' => TRUE,'default' => '',),
+			'firstname' => array('type' => 'varchar','length' => 35,'not null' => TRUE,'default' => '',),
+			'lastname' => array('type' => 'varchar','length' => 35,'not null' => TRUE,'default' => '',),
+			'displayname' => array('type' => 'varchar','length' => 70,'not null' => TRUE,'default' => '',),
+			'fullnamereversed' => array('type' => 'varchar','length' => 70,'not null' => FALSE,),
+			'jobtitle' => array('type' => 'varchar','length' => 255,'not null' => TRUE,'default' => '',),
+			'address' => array('type' => 'varchar','length' => 128,'default' => '',),
+			'phone' => array('type' => 'varchar','length' => 20,'default' => '',),
+			'phone2' => array('type' => 'varchar','length' => 20,'default' => '',),
+			'fax' => array('type' => 'varchar','length' => 20,'default' => '',),
+			'email' => array('type' => 'varchar','length' => 128,'not null' => TRUE,'default' => '',),
+			'email_privacy' => array('type' => 'varchar','length' => 7,'not null' => TRUE,'default' => '',),
+			'photo' => array('type' => 'varchar','length' => 255,'default' => '',),
+			'url' => array('type' => 'varchar','length' => 255,'default' => '',),
 		),
 		'primary key' => array('sid'),
 	);
-	db_create_table('staff', $schema['staff']);
+	$schema['dul_dept'] = array(
+		'fields' => array(
+			'did' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE,),
+			'dept_id' => array('type' => 'int', 'unsigned' => TRUE, 'size' => 'small',),
+			'title' => array('type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => ''),
+			'description' => array('type' => 'text',),
+			'address' => array('type' => 'varchar','length' => 128,'default' => '',),
+			'phone' => array('type' => 'varchar','length' => 20,'default' => '',),
+			'phone2' => array('type' => 'varchar','length' => 20,'default' => '',),
+			'fax' => array('type' => 'varchar','length' => 20,'default' => '',),
+			'email' => array('type' => 'varchar','length' => 128,'not null' => TRUE,'default' => '',),
+			'campusbox' => array('type' => 'varchar', 'length' => 10,),
+			'head_person_id' => array('type' => 'int', 'unsigned' => TRUE,),
+			'head_title' => array('type' => 'varchar', 'length' => 128,),
+			'url' => array('type' => 'varchar','length' => 255,'default' => '',),
+			'parent_did' => array('type' => 'int', 'unsigned' => TRUE,),
+		),
+		'primary key' => array('did'),
+	);
+	$schema['dul_dept_member'] = array(
+		'fields' => array(
+			'did' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE,),
+			'person_id' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+		),
+		'primary key' => array('did', 'person_id'),
+	);
+	return $schema;
 }
 
 function dul_system_update_7111() {
@@ -102,5 +64,49 @@ function dul_system_update_7111() {
 		'length' => 255,
 		'not null' => FALSE,
 		'default' => '',
+	));
+}
+
+function dul_system_update_7112() {
+	db_add_field('staff', 'person_id', array(
+		'type' => 'int', 'not null' => TRUE, 'unsigned' => TRUE, 'default' => 0,
+	));
+	db_create_table('dul_dept', array(
+		'fields' => array(
+			'did' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE,),
+			'title' => array('type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => ''),
+			'address' => array('type' => 'varchar','length' => 128,'default' => '',),
+			'phone' => array('type' => 'varchar','length' => 20,'default' => '',),
+			'phone2' => array('type' => 'varchar','length' => 20,'default' => '',),
+			'fax' => array('type' => 'varchar','length' => 20,'default' => '',),
+			'email' => array('type' => 'varchar','length' => 128,'not null' => TRUE,'default' => '',),
+			'campusbox' => array('type' => 'varchar', 'length' => 10,),
+			'head_person_id' => array('type' => 'int', 'unsigned' => TRUE,),
+			'head_title' => array('type' => 'varchar', 'length' => 128,),
+			'url' => array('type' => 'varchar','length' => 255,'default' => '',),
+			'parent_did' => array('type' => 'int', 'unsigned' => TRUE,),
+		),
+		'primary key' => array('did'),
+	));
+}
+
+/*
+ * Add 'dept_id' column to dul_dept table
+ */
+function dul_system_update_7113() {
+	db_add_field('dul_dept', 'dept_id', array('type' => 'int', 'size' => 'small', 'unsigned' => TRUE));
+	db_add_field('dul_dept', 'description', array('type' => 'text',));
+}
+
+/**
+ * Add dul_dept_member table.
+ */
+function dul_system_update_7114() {
+	db_create_table('dul_dept_member', array(
+		'fields' => array(
+			'did' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE,),
+			'person_id' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+		),
+		'primary key' => array('did', 'person_id'),
 	));
 }

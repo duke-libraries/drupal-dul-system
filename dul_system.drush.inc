@@ -52,13 +52,58 @@ function drush_dul_system_dul_refresh_staff() {
 	// process each node in the XML file
 	// NOTE -- will need to use SimpleXML object (see: http://php.net/manual/en/book.simplexml.php)
 
+	$depts = array();
 	$persons = array();
+	
 	try {
 		$xml = new SimpleXMLElement($content);
 	} catch(Exception $e) {
 		return drush_set_error('STAFF_REFRESH', dt($e->getMessage()));
 	}
 
+	$depts = $xml->xpath('/directory/depts/dept');
+	if (empty($depts)) {
+		return drush_set_error('STAFF_REFRESH', t('Unable to read staff data -- depts array is empty'));
+	}
+	
+	$result = db_truncate('dul_dept')->execute();
+	$result = db_truncate('dul_dept_member')->execute();
+	
+	foreach ($depts as $dept) {
+		drush_print("processing " . (string) $dept->name);
+		
+		$status = db_insert('dul_dept')
+			->fields(array(
+				'dept_id' => $dept['id'],
+				'title' => (string) $dept->name,
+				'address' => (string) $dept->address,
+				'description' => (string) $dept->description,
+				'head_person_id' => (int) $dept->head,
+				'head_title' => (string) $dept->headtitle,
+				'phone' => (string) $dept->phone,
+				'parent_did' => (int) $dept->parent,
+				'url' => (string) $dept->url,
+				'email' => (string) $dept->email,
+				'fax' => (string) $dept->fax,
+				'campusbox' => (string) $dept->campusbox,
+			))
+			->execute();
+			
+			$members = array();
+			$members = $dept->xpath('members/member');
+			if (!empty($members)) {
+				foreach($members as $member) {
+					db_insert('dul_dept_member')
+						->fields(array(
+							'did' => $dept['id'],
+							'person_id' => (int) $member,
+					))
+					->execute();
+				}
+			}
+		drush_print("insert returned: " . $status);
+	}
+	
 	// locate the <person> elements
 	$persons = $xml->xpath('/directory/staff/person');
 	if (empty($persons)) {
@@ -67,17 +112,12 @@ function drush_dul_system_dul_refresh_staff() {
 
 	// delete (or truncate) the contents of the 'staff' table
 	$result = db_truncate('staff')->execute();
-
-	// foreach node, create a stdClass object:
-	// example:
-	// $o = new stdClass();
-	// $o->firstname = "the value of the attribute that holds the 'firstname' in the xml data row";
-	// --> repeat for all data values
 	
 	foreach ($persons as $person) {
 		$sid = db_insert('staff')
 		->fields(array(
 			'netid' => (string) $person->netid,
+			'person_id' => (int) $person['id'],
 			'firstname' => (string) $person->firstname,
 			'lastname' => (string) $person->lastname,
 			'jobtitle' => (string) $person->title,

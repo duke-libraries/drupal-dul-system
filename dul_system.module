@@ -35,14 +35,14 @@ function dul_system_menu() {
 			'type' => MENU_NORMAL_ITEM,
 			'file' => 'dul_system.admin.inc',
 		),
-		'staff' => array(
-			'page callback' => 'dul_system_staff_page',
+		'about/staff' => array(
+			'page callback' => 'dul_system_staff_directory',
 			'file' => 'dul_system.staff.inc',
 			'access callback' => TRUE,
 		),
-		'staff/%' => array(
+		'about/staff/dept/%dul_system_dept' => array(
 			'page callback' => 'dul_system_staff_page',
-			'page arguments' => array(1),
+			'page arguments' => array(3),
 			'file' => 'dul_system.staff.inc',
 			'access callback' => TRUE,
 		),
@@ -150,7 +150,7 @@ function dul_system_block_save($delta = '', $edit = array()) {
 /**
  * Implements hook_theme()
  */
-function dul_system_theme() {
+function dul_system_theme($existing, $type, $theme, $path) {
 	return array(
 		'welcome-loggedin' => array(
 			'template' => 'welcome-loggedin',
@@ -158,6 +158,13 @@ function dul_system_theme() {
 		'welcome-anonymous' => array(
 			'template' => 'welcome-anonymous'
 		),
+		'staff_directory' => array(
+			'file' => 'dul_system.staff.inc',
+			'variables' => array('top_dept' => NULL, 'reporting_depts' => NULL),
+		),
+		'core-services' => array(
+			'template' => 'dul_system-core-services',
+		)
 	);
 }	
 
@@ -172,9 +179,41 @@ function dul_system_block_view_alter(&$data, $block) {
 	if ($block->module == 'system' && $block->delta == 'powered-by') {
 		$data['content'] = t('Powered by Duke University Libraries');
 	}
+	//dpm($data);
+	//dpm($block);	
 	#if ($block->module == 'menu' && preg_match('/^menu-.+-menu$/', $block->delta)) {
 	#	dpm($data);
 	#}
+}
+
+/**
+ * Implements hook_form_alter for the aggregator-form-feed form
+ */
+function dul_system_form_aggregator_form_feed_alter(&$form, &$form_state) {
+	if (isset($form['fid'])) {
+		$variable_key = 'dul_system.aggregator_url_more_link_fid_' . $form['fid']['#value'];
+		$form['dul_system'] = array(
+			'#type' => 'fieldset',
+			'#title' => t('DUL-specific Settings For This Feed'),
+			'#description' => t('Settings applicable only to Duke University Libraries'),
+			'#collapsible' => TRUE,
+			'#collapsed' => FALSE,
+			'#tree' => TRUE,
+		);
+		$form['dul_system']['url_for_more_link'] = array(
+			'#type' => 'textfield',
+			'#title' => t('URL for the <em>More</em> Link'),
+			'#default_value' => variable_get($variable_key, ''),
+		);
+		$form['#submit'][] = 'dul_system_aggregator_form_submit';
+	}
+}
+
+function dul_system_aggregator_form_submit($form, &$form_state) {
+	if (isset($form_state['values']['url_for_more_link'])) {
+		$variable_key = 'dul_system.aggregator_url_more_link_fid_' . $form_state['values']['fid'];
+		variable_set($variable_key, $form_state['values']['dul_system']['url_for_more_link']);
+	}
 }
 
 /**
@@ -182,7 +221,7 @@ function dul_system_block_view_alter(&$data, $block) {
  */
 function dul_system_form_alter(&$form, &$form_state, $form_id) {
 	if ($form_id == 'shib_auth_custom_data' && isset($form['custom_username'])) {
-		watchdog('form_alter', print_r($form['custom_username'], TRUE));
+
 		// remove the #default_value from the 'custom_username' field,
 		// so as not to:
 		// 		1) confuse the end-user and 
@@ -242,8 +281,33 @@ function dul_system_preprocess(&$variables, $hook) {
  * Implements hook_cron()
  */
 function dul_system_cron() {
-	$xslt = new XSLTProcessor();
-	$content = file_get_contents('http://library.duke.edu/apps/directory/cms/feed.xml');
+	//$xslt = new XSLTProcessor();
+	//$content = file_get_contents('http://library.duke.edu/apps/directory/cms/feed.xml');
 	#print_r($content);
+}
+
+function dul_system_dept_load($dept_id) {
+	$q = db_select('dul_dept', 'd');
+	$q->fields('d');
+	$q->leftJoin('staff', 's', 'd.head_person_id = s.person_id');
+	$q->fields('s');
+	$q->condition('dept_id', $dept_id);
+	$res = $q->execute();
+	
+	$dept = $res->fetchObject();
+	$dept->members = array();
+	
+	$q = db_select('staff', 's');
+	$q->join('dul_dept_member', 'm', 'm.person_id = s.person_id');
+	$q->fields('s')
+		->condition('m.did', $dept_id)
+		->orderBy('lastname')
+		->orderBy('firstname');
+	$res = $q->execute();
+	foreach ($res as $member) {
+		$dept->members[] = $member;
+	}
+	
+	return $dept;
 }
 
