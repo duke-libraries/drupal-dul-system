@@ -37,6 +37,7 @@ function dul_system_menu() {
 		),
 		'about/staff' => array(
 			'page callback' => 'dul_system_staff_directory',
+			'title' => 'Duke University Libraries Staff Directory',
 			'file' => 'dul_system.staff.inc',
 			'access callback' => TRUE,
 		),
@@ -49,6 +50,12 @@ function dul_system_menu() {
 		'whoops' => array(
 			'page callback' => 'dul_system_404',
 			'access callback' => TRUE
+		),
+		'about/staff/netid/%' => array(
+			'page callback' => 'dul_system_staff_netid',
+			'page arguments' => array(3),
+			'file' => 'dul_system.staff.inc',
+			'access callback' => TRUE,
 		)
 	);
 }
@@ -149,6 +156,7 @@ function dul_system_block_save($delta = '', $edit = array()) {
 
 /**
  * Implements hook_theme()
+ * Defines custom themes here.
  */
 function dul_system_theme($existing, $type, $theme, $path) {
 	return array(
@@ -162,6 +170,24 @@ function dul_system_theme($existing, $type, $theme, $path) {
 			'file' => 'dul_system.staff.inc',
 			'variables' => array('top_dept' => NULL, 'reporting_depts' => NULL),
 		),
+		'staff_dept_address' => array(
+			'file' => 'dul_system.staff.inc',
+			'variables' => array('dept' => NULL),
+		),
+		'staff_person' => array(
+			'variables' => array('staff_person' => NULL),
+			
+			// FILE-based
+			// the default theme function lives here...
+			// Drupal will look for <hook>_staff_person
+			'file' => 'dul_system.staff.inc',
+
+			// TEMPLATE
+			// Drupal will look for the file 'staff_person.tpl.php'
+			// 'template' => 'staff_person',
+			// 'path' => $path . '/templates' <--- do this if you want to have a 'templates' folder in your module
+		),
+		
 		'core-services' => array(
 			'template' => 'dul_system-core-services',
 		)
@@ -289,8 +315,10 @@ function dul_system_cron() {
 function dul_system_dept_load($dept_id) {
 	$q = db_select('dul_dept', 'd');
 	$q->fields('d');
+	$q->addField('d', 'email', 'dept_email');
 	$q->leftJoin('staff', 's', 'd.head_person_id = s.person_id');
 	$q->fields('s');
+	$q->addField('s', 'email', 'dept_head_email');
 	$q->condition('dept_id', $dept_id);
 	$res = $q->execute();
 	
