@@ -98,6 +98,10 @@ function theme_staff_person($variables) {
 	
 }
 
+function dul_system_staff_page2($dept) {
+	return print_r($dept, TRUE);
+}
+
 function dul_system_staff_page($dept) {
 	drupal_set_title($dept->title);
 	
@@ -126,7 +130,8 @@ function dul_system_staff_page($dept) {
 	$rows = array();
 	foreach ($dept->members as $member) {
 		$row = array();
-		$row[] = $member->displayname;
+		$row[] = l(t($member->displayname), 'http://library.duke.edu/apps/directory/staff/' . $member->person_id);
+		#$row[] = $member->displayname;
 		$row[] = $member->jobtitle;
 		$row[] = $member->phone;
 		$row[] = ($member->email_privacy == 'False') ? $member->email : '';
@@ -134,6 +139,10 @@ function dul_system_staff_page($dept) {
 			'data' => $row,
 		);
 	}
+	$build['debug'] = array(
+		'#type' => 'markup',
+		'#markup' => 'This is beautiful',
+	);
 	$build['members'] = array(
 		'#theme' => 'table',
 		'#header' => $header,
