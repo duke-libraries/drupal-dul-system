@@ -139,14 +139,11 @@ function dul_system_staff_page($dept) {
 			'data' => $row,
 		);
 	}
-	$build['debug'] = array(
-		'#type' => 'markup',
-		'#markup' => 'This is beautiful',
-	);
 	$build['members'] = array(
 		'#theme' => 'table',
 		'#header' => $header,
 		'#rows' => $rows,
+		'#empty' => t('This department reportedly has no staff members.'),
 		'#attributes' => array(
 			'class' => array('table', 'table-condensed'),
 		)
@@ -186,7 +183,7 @@ function theme_staff_directory($variables) {
 	foreach ($reporting_depts as $dept) {
 		$row = array(
 			'data' => array(
-				array('data' => t(strtoupper($dept->title)), 'colspan' => 3, 'header' => TRUE,),
+				array('data' => l(t(strtoupper($dept->title)), 'about/staff/dept/' . $dept->dept_id), 'colspan' => 3, 'header' => TRUE,),
 				array('data' => t($dept->head_displaytitle), 'header' => TRUE,),
 			),
 		);

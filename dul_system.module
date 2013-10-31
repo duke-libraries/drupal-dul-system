@@ -56,7 +56,14 @@ function dul_system_menu() {
 			'page arguments' => array(3),
 			'file' => 'dul_system.staff.inc',
 			'access callback' => TRUE,
-		)
+		),
+		'ext/header' => array(
+			'title' => 'Header HTML for external applications',
+			'page callback' => 'external_header_html',
+			'access callback' => TRUE,
+			'type' => MENU_CALLBACK,
+			'file' => 'dul_system.external.inc',
+		),
 	);
 }
 
@@ -64,7 +71,11 @@ function dul_system_menu() {
  * Generates the 404 response
  */
 function dul_system_404() {
-	$output = print_r($_REQUEST);
+	
+	// TODO - place this in a admin form element
+	drupal_set_title(t("Sorry, Your Page Isn't Here"));
+	
+	$output = theme('oh-snap', array());
 	return $output;
 }
 
@@ -96,6 +107,12 @@ function dul_system_block_info() {
 		'info' => t('Library Alert Message Block'),
 		'cache' => DRUPAL_NO_CACHE,
 	);
+	$blocks['twitter-datagis'] = array(
+		'info' => t('Twitter Widget for Data and GIS'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+
+
 
 	return $blocks;
 }
@@ -117,6 +134,10 @@ function dul_system_block_view($delta) {
 
 		case 'library-alert':
 			$block['content'] = filter_xss(variable_get('dul_system.alert_message'), '');
+			break;
+			
+		case 'twitter-datagis':
+			$block['content'] = theme('twitter-datagis', array());
 			break;
 	}
 
@@ -190,7 +211,15 @@ function dul_system_theme($existing, $type, $theme, $path) {
 		
 		'core-services' => array(
 			'template' => 'dul_system-core-services',
-		)
+		),
+
+		'oh-snap' => array(
+			'template' => 'oh-snap',
+		),
+		
+		'twitter-datagis' => array(
+			'template' => 'twitter-datagis',
+		),
 	);
 }	
 
@@ -205,11 +234,14 @@ function dul_system_block_view_alter(&$data, $block) {
 	if ($block->module == 'system' && $block->delta == 'powered-by') {
 		$data['content'] = t('Powered by Duke University Libraries');
 	}
-	//dpm($data);
-	//dpm($block);	
-	#if ($block->module == 'menu' && preg_match('/^menu-.+-menu$/', $block->delta)) {
-	#	dpm($data);
-	#}
+	if ($block->module == 'aggregator') {
+		// THIS is not the secure, scalable code, but it'll work for stripping the class off of the <UL> element
+		if ($data['subject'] == 'Library News') {
+			if (isset($data['content'])) {
+				$data['content'] = str_replace(' id="rotate1"', '', $data['content']);
+			}
+		}
+	}
 }
 
 /**
@@ -336,6 +368,27 @@ function dul_system_dept_load($dept_id) {
 		$dept->members[] = $member;
 	}
 	
+	if (count($dept->members == 0) && $dept->parent_did == 1) {
+		$dept->allmembers = array();
+		$r = db_select('dul_dept', 'd')
+			->fields('d', array('did', 'dept_id'))
+			->condition('parent_did', $dept->dept_id)
+			->execute();
+			
+		foreach ($r as $child_dept) {
+			$s = db_select('staff', 's');
+			$s->join('dul_dept_member', 'dm', 'dm.person_id = s.person_id');
+			$s->fields('s');
+			$s->condition('dm.did', $child_dept->dept_id);
+			$rs = $s->execute();
+			foreach ($rs as $staff) {
+				$dept->members[] = $staff;
+				$dept->allmembers[] = $staff;
+			}
+		}
+	}
+	
 	return $dept;
 }
+
 
