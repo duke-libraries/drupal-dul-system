@@ -49,7 +49,11 @@ function dul_system_menu() {
 		),
 		'whoops' => array(
 			'page callback' => 'dul_system_404',
-			'access callback' => TRUE
+			'access callback' => TRUE,
+		),
+		'whoops_unauthorized' => array(
+			'page callback' => 'dul_system_403',
+			'access callback' => TRUE,
 		),
 		'about/staff/netid/%' => array(
 			'page callback' => 'dul_system_staff_netid',
@@ -76,6 +80,16 @@ function dul_system_404() {
 	drupal_set_title(t("Sorry, Your Page Isn't Here"));
 	
 	$output = theme('oh-snap', array());
+	return $output;
+}
+
+/**
+ * Generates the HTTP 403 (Forbidden) response
+ */
+function dul_system_403() {
+	drupal_set_title( t('Unauthorized Request') );
+
+	$output = theme('oh-snap');
 	return $output;
 }
 
