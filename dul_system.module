@@ -337,7 +337,7 @@ function dul_system_menu_alter(&$items) {
 }
 
 /**
- * Implements hook_preprocessi()
+ * Implements hook_preprocess()
  *
  * Add a variable named "library_address" that represents 
  * the address stored in the dul_system.footer_address system variable
@@ -346,6 +346,18 @@ function dul_system_preprocess(&$variables, $hook) {
 	$variables['library_address'] = '';
 	if ($hook == 'region' && $variables['region'] == 'footer_contact') {
 		$variables['library_address'] = variable_get('dul_system.footer_address', '');
+	}
+
+	// SETTING THE ENDECA (Catalog Search) URL
+	// when detecting the 'megamenu' region, make sure the Endeca URL 
+	// points to the staging site.
+	// -- 
+	// We'll use this variable in the 'madlib' theme's 'region--megamenu.tpl.php' file.
+	if ($hook == 'region' && $variables['region'] == 'megamenu') {
+		$variables['endeca_url'] = 'http://search.library.duke.edu/';
+		if (preg_match('/-pre/', $_SERVER['SERVER_NAME'])) {
+			$variables['endeca_url'] = 'http://search-dev.trln.org:8080/Sandbox_dukepre/';
+		}
 	}
 }
 
