@@ -55,6 +55,10 @@ function dul_system_menu() {
 			'page callback' => 'dul_system_403',
 			'access callback' => TRUE,
 		),
+		'whoops_ise' => array(
+			'page callback' => 'dul_system_500',
+			'access callback' => TRUE,
+		),
 		'about/staff/netid/%' => array(
 			'page callback' => 'dul_system_staff_netid',
 			'page arguments' => array(3),
@@ -70,6 +74,58 @@ function dul_system_menu() {
 		),
 	);
 }
+
+/**
+ * Implements hook_theme()
+ * Defines custom themes here.
+ */
+function dul_system_theme($existing, $type, $theme, $path) {
+	return array(
+		'welcome-loggedin' => array(
+			'template' => 'welcome-loggedin',
+		),
+		'welcome-anonymous' => array(
+			'template' => 'welcome-anonymous'
+		),
+		'staff_directory' => array(
+			'file' => 'dul_system.staff.inc',
+			'variables' => array('top_dept' => NULL, 'reporting_depts' => NULL),
+		),
+		'staff_dept_address' => array(
+			'file' => 'dul_system.staff.inc',
+			'variables' => array('dept' => NULL),
+		),
+		'staff_person' => array(
+			'variables' => array('staff_person' => NULL),
+			
+			// FILE-based
+			// the default theme function lives here...
+			// Drupal will look for <hook>_staff_person
+			'file' => 'dul_system.staff.inc',
+
+			// TEMPLATE
+			// Drupal will look for the file 'staff_person.tpl.php'
+			// 'template' => 'staff_person',
+			// 'path' => $path . '/templates' <--- do this if you want to have a 'templates' folder in your module
+		),
+		
+		'core-services' => array(
+			'template' => 'dul_system-core-services',
+		),
+
+		'oh-snap' => array(
+			'template' => 'oh-snap',
+		),
+		
+		'server_error' => array(
+			'template' => 'server_error',
+		),
+		
+		'twitter-datagis' => array(
+			'template' => 'twitter-datagis',
+		),
+	);
+}	
 
 /**
  * Generates the 404 response
@@ -93,6 +149,15 @@ function dul_system_403() {
 	return $output;
 }
 
+/**
+ * Generates the HTTP 50x responses
+ */
+function dul_system_500() {
+	drupal_set_title( t('The server has encountered a problem') );
+	
+	$output = theme('server_error');
+	return $output;
+}
 /**
  * Implements hook_permission()
  */
@@ -188,54 +253,6 @@ function dul_system_block_save($delta = '', $edit = array()) {
 
 	return;
 }
-
-/**
- * Implements hook_theme()
- * Defines custom themes here.
- */
-function dul_system_theme($existing, $type, $theme, $path) {
-	return array(
-		'welcome-loggedin' => array(
-			'template' => 'welcome-loggedin',
-		),
-		'welcome-anonymous' => array(
-			'template' => 'welcome-anonymous'
-		),
-		'staff_directory' => array(
-			'file' => 'dul_system.staff.inc',
-			'variables' => array('top_dept' => NULL, 'reporting_depts' => NULL),
-		),
-		'staff_dept_address' => array(
-			'file' => 'dul_system.staff.inc',
-			'variables' => array('dept' => NULL),
-		),
-		'staff_person' => array(
-			'variables' => array('staff_person' => NULL),
-			
-			// FILE-based
-			// the default theme function lives here...
-			// Drupal will look for <hook>_staff_person
-			'file' => 'dul_system.staff.inc',
-
-			// TEMPLATE
-			// Drupal will look for the file 'staff_person.tpl.php'
-			// 'template' => 'staff_person',
-			// 'path' => $path . '/templates' <--- do this if you want to have a 'templates' folder in your module
-		),
-		
-		'core-services' => array(
-			'template' => 'dul_system-core-services',
-		),
-
-		'oh-snap' => array(
-			'template' => 'oh-snap',
-		),
-		
-		'twitter-datagis' => array(
-			'template' => 'twitter-datagis',
-		),
-	);
-}	
 
 /**
  * Implements hook_block_view_alter for the 'powered-by' system block
