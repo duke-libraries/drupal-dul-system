@@ -47,12 +47,24 @@ function dul_system_menu() {
 			'file' => 'dul_system.staff.inc',
 			'access callback' => TRUE,
 		),
+		'error/404' => array(
+			'page callback' => 'dul_system_404',
+			'access callback' => TRUE,
+		),
 		'whoops' => array(
 			'page callback' => 'dul_system_404',
 			'access callback' => TRUE,
 		),
+		'error/403' => array(
+			'page callback' => 'dul_system_403',
+			'access callback' => TRUE,
+		),
 		'whoops_unauthorized' => array(
 			'page callback' => 'dul_system_403',
+			'access callback' => TRUE,
+		),
+		'error/500' => array(
+			'page callback' => 'dul_system_500',
 			'access callback' => TRUE,
 		),
 		'whoops_ise' => array(
