@@ -88,6 +88,34 @@ function dul_system_menu() {
 }
 
 /**
+ * 
+ */
+function dul_system_menu_link_alter(&$link) {
+	kpr('in link alter');
+	if ($link['module'] == 'menu') {
+		kpr($link);
+	}
+}
+
+/**
+ * Implements hook_url_outbound_alter()
+ * 
+ * When accessed directly from libcms-xx, change any FQDN references to 'library.duke.edu' to
+ * the actual server name
+ * 
+ */
+function dul_system_url_outbound_alter(&$path, &$options, $original_path) {
+	if ($options['external']) {
+		if ($_SERVER['HTTPS'] == 'off') {
+		}
+
+		if (preg_match('/^http:\/\/(|pre\.|dev\.)library.duke.edu/', $path) && !isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+			$path = preg_replace('/((|pre\.|dev\.)library\.duke\.edu)/', $_SERVER['SERVER_NAME'], $path);
+		}
+	}
+}
+
+/**
  * Implements hook_theme()
  * Defines custom themes here.
  */
