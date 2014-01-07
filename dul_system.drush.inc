@@ -26,6 +26,11 @@ function dul_system_drush_command() {
 		'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_DATABASE,
 	);
 
+	$items['dul-node-image-check'] = array(
+		'description' => 'List the nodes and revisions whose body fields contain hard-coded image and/or link references',
+		'aliases' => array('dimgchk'),
+		'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_DATABASE,
+	);
 	return $items;
 }
 
@@ -143,4 +148,26 @@ function drush_dul_system_dul_refresh_staff() {
 	// END foreach
 
 	// done. :)
+}
+
+function drush_dul_system_dul_node_image_check() {
+	$query = db_select('field_data_body', 'fdb')
+		->fields('fdb', array('entity_id','revision_id', 'entity_type'))
+		->condition('body_value', '%' . db_like('//libcms.oit.duke.edu') . '%', 'LIKE');
+	$query->join('node_revision', 'nr', 'fdb.entity_id = nr.nid AND fdb.revision_id = nr.vid');
+	$query->addField('nr', 'title');
+	$result = $query->execute();
+	
+	$now = time();
+	$handle = fopen('/srv/web/libcms/node_check/node_check_' . $now . '.tsv', 'w');
+	$how_many = 0;
+	foreach ($result as $row) {
+		$arr = array($row->title);
+		$arr[] = sprintf("https://libcms.oit.duke.edu/node/%s/%s", $row->entity_id, $row->revision_id);
+		fputcsv($handle, $arr, "\t");
+		drush_print_r($row);
+		$how_many++;
+	}
+	drush_print(sprintf("How Many: %s", $how_many));
+	fclose($handle);
 }
