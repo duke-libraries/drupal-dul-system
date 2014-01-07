@@ -106,9 +106,6 @@ function dul_system_menu_link_alter(&$link) {
  */
 function dul_system_url_outbound_alter(&$path, &$options, $original_path) {
 	if ($options['external']) {
-		if ($_SERVER['HTTPS'] == 'off') {
-		}
-
 		if (preg_match('/^http:\/\/(|pre\.|dev\.)library.duke.edu/', $path) && !isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
 			$path = preg_replace('/((|pre\.|dev\.)library\.duke\.edu)/', $_SERVER['SERVER_NAME'], $path);
 		}
