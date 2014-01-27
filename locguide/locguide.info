@@ -1,0 +1,12 @@
+name = Location Guide
+description = Provides location information for resources located in the Duke University Libraries
+files[] = locguide.module
+files[] = locguide.admin.inc
+files[] = locguide.model.inc
+files[] = locguide.model.locmap.inc
+files[] = libcatalog/libcatalog.xserver.inc
+files[] = libcatalog/libcatalog.xserver.item.inc
+core = 7.x
+package = Duke Libraries UI
+dependencies[] = dul_system
+dependencies[] = libcatalog

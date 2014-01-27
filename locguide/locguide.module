@@ -1,0 +1,89 @@
+<?php
+
+/**
+ * Implements hook menu
+ */
+function locguide_menu() {
+	$items['admin/config/locguide'] = array(
+		'title' => 'Location Guides',
+		'description' => 'Adjust Location Guide Settings for Library Resources',
+		'position' => 'right',
+		'weight' => -5,
+		'page callback' => 'system_admin_menu_block_page',
+		'access arguments' => array('administer site configuration'),
+		'file' => 'system.admin.inc',
+		'file path' => drupal_get_path('module', 'system'),
+	);
+	$items['admin/config/locguide/areamaps'] = array(
+		'page callback' => 'locguide_admin_areamaps',
+		'file' => 'locguide.admin.inc',
+		'title' => 'Area Maps',
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_NORMAL_ITEM,
+	);
+	$items['admin/config/locguide/areamap/%locguide_areamap/edit'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_areamap_form', 4),
+		'file' => 'locguide.admin.inc',
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_LOCAL_TASK,
+	);
+	$items['admin/config/locguide/areamaps/new'] = array(
+		'type' => MENU_LOCAL_TASK,
+		'title' => 'New Area Map',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_areamap_form'),
+		'file' => 'locguide.admin.inc',
+		'access arguments' => array('administer site configuration'),
+	);
+	$items['areamap/%locguide_areamap'] = array(
+		'type' => MENU_CALLBACK,
+		'page callback' => 'locguide_areamap',
+		'page arguments' => array(1),
+		'file' => 'locguide.pages.areamap.inc',
+		'access callback' => TRUE,
+	);
+
+	return $items;
+}
+
+/**
+ * Implements hook_permission()
+ */
+function locguide_permission() {
+	return array(
+		'administer location guides' => array(
+			'title' => t('Administer Location Guides'),
+			'description' => t('Perform administrative tasks for locations guides data'),
+		),
+	);
+}
+
+/**
+ * Implements hook_theme()
+ */
+function locguide_theme() {
+	$items['areamap'] = array(
+		'function' => 'locguide_theme_areamap',
+		'file' => 'locguide.pages.areamap.inc',
+		'variables' => array('areamap' => NULL),
+	);
+	return $items;
+}
+
+/**
+ * Auto-loader for Area Map
+ */
+function locguide_areamap_load($areamap_id) {
+	db_set_active('locationguide');
+	$query = db_select('locationguide_areamap', 'am')
+		->fields('am')
+		->condition('am.id', $areamap_id);
+
+	$result = $query->execute();
+
+	$o = $result->fetchObject();
+
+	db_set_active();
+	return $o;
+}

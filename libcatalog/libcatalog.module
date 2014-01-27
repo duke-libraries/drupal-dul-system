@@ -1,0 +1,89 @@
+<?php
+
+/**
+ * Implements hook_menu
+ */
+function libcatalog_menu() {
+	$items['xtest'] = array(
+		'page callback' => 'libcatalog_xtest',
+		'access callback' => TRUE,
+		'title' => 'XServer Test',
+		'type' => MENU_CALLBACK,
+	);
+
+	$items['find/barcode'] = array(
+		'page callback' => 'libcatalog_find_barcode',
+		'title' => 'Find Barcode',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,
+	);
+	$items['find/label'] = array(
+		'page callback' => 'libcatalog_find_label',
+		'title' => 'Find by Label',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,
+	);
+	return $items;
+}
+
+/**
+ * Implements hook_theme
+ */
+function libcatalog_theme() {
+	return array(
+		'area-map' => array(
+			'template' => 'area-map',
+			'variables' => array('locMap' => NULL),
+		),
+		'external-link' => array(
+			'template' => 'external-link',
+			'variables' => array('extLink' => NULL),
+		),
+	);
+}
+
+function libcatalog_xtest() {
+	global $conf;
+	
+
+	# http://dev.library.duke.edu/apps/locationguide/find/HBBQ-7285-00001__
+
+	# create a model for Location Map
+	
+	$model = new LocMapManager();
+	//$locMap = $model->getLocationMapByBarcode('HBBQ-7285-00001__');
+	
+	try {
+		$locMap = $model->getLocationMapByBarcode('D01957471Y__');
+		if (!is_null($locMap->areaMap)) {
+			dpm($locMap->areaMap);
+		} elseif(!is_null($locMap->externalLink)) {
+			dpm($locMap->externalLink);
+		}
+	} catch(Exception $x) {
+		
+	}
+
+	return 'Happy';
+}
+
+function libcatalog_find_label($label) {
+	return 'Happy';
+}
+
+function libcatalog_find_barcode($barcode) {
+	# emulate the Django project's barcode retrieval
+	# http://dev.library.duke.edu/apps/locationguide/find/HBBQ-7285-00001__
+
+	# create a model for Location Map
+	$model = new LocMapManager();
+	$locMap = $model->getLocationMapByBarcode($barcode);
+	if (!is_null($locMap->areamap)) {
+		dpm($locMap->areamap);
+		return theme('area-map', array('areaMap' => $locMap));
+	} elseif (!is_null($locMap->externalLink)) {
+		return theme('external-link', array('extLink' => $locMap));
+	}
+
+	return 'Happy';
+}
