@@ -1,5 +1,5 @@
 <?php
-include_once('libcatalog.model.helpers.inc');
+include_once('locguide.model.helpers.inc');
 class LocMapManager {
 
 	function getLocationMapByBarcode($barcode) {
@@ -54,7 +54,6 @@ class LocMapManager {
 			} catch(Exception $x) {
 				error_log($x->getMessage());
 			}
-			dpm($o);
 		}
 		db_set_active();
 
@@ -63,10 +62,8 @@ class LocMapManager {
 		}
 		$locmap = new LocationMap($o, $this);
 		return $locmap;
-		
-		//dpm($item->getValueForTagName(XServerItem::$CALLNO));
-		//return '';
 	}
+
 	function getAreaMap($mapId) {
 		$old = db_set_active('locationguide');
 
@@ -80,6 +77,7 @@ class LocMapManager {
 		db_set_active($old);
 		return $o == FALSE ? NULL : $o;
 	}
+	
 	function getExternalLink($externalLinkId) {
 		$old = db_set_active('locationguide');
 

@@ -1,6 +1,11 @@
 <?php
 
 define('BIB_PATRON_LIB', 'DUK50');
+define('BIB_LIB', 'DUK01');
+define('COURSE_LIB', 'DUK30');
+define('COURSE_BASE', 'u-duke30');
+
+define('MARC21_NAMESPACE', 'http://www.loc.gov/MARC21/slim/');
 
 class XServer {
 	private $_session_id = '';
@@ -63,6 +68,48 @@ class XServer {
 		$item = new XServerItem($result->xml()->x30);
 		return $item;
 	}
+	
+	/**
+	 * 
+	 */
+	function getTitleInfoFromSession($request=NULL, $sysno=NULL) {
+		
+	}
+	
+	/**
+	 * Get bibliographic information on the system-number. 
+	 * This is a way to get title data as an object (not an HTML-formatted string).
+	 * Preferred usage is to be invoked by 'getTitleInfoFromSession' method
+	 * to keep x-server traffic to a minimum.
+	 */
+	function getTitleAsXServerTitle($sysno, $base=BIB_LIB) {
+		$result = NULL;
+		
+		$query = array(
+			'op' => 'ill-get-doc',
+			'library' => $base,
+			'doc_number' => $sysno
+		);
+		$result = $this->request($query);
+
+		$xml = $result->xml();
+		$xml->registerXPathNamespace('marc21', MARC21_NAMESPACE);
+		$title_node = $xml->xpath('//marc21:record');
+		if (sizeof($title_node)) {
+			// dpm($title_node);
+			return new XServerTitle($title_node[0]);
+		}
+	
+		return new XServerEmptyResultSet;
+	}
 }
 
+class XServerEmptyResultSet {}
+
+class XServerTitle {
+	private $_element;
+	function __construct($elem) {
+		$this->_element = $elem;
+	}
+}
 

@@ -10,18 +10,11 @@ function libcatalog_menu() {
 		'title' => 'XServer Test',
 		'type' => MENU_CALLBACK,
 	);
-
-	$items['find/barcode'] = array(
-		'page callback' => 'libcatalog_find_barcode',
-		'title' => 'Find Barcode',
-		'type' => MENU_CALLBACK,
+	$items['xtitletest'] = array(
+		'page callback' => 'libcatalog_xtitle_test',
 		'access callback' => TRUE,
-	);
-	$items['find/label'] = array(
-		'page callback' => 'libcatalog_find_label',
-		'title' => 'Find by Label',
+		'title' => 'XServer Title Test',
 		'type' => MENU_CALLBACK,
-		'access callback' => TRUE,
 	);
 	return $items;
 }
@@ -42,19 +35,17 @@ function libcatalog_theme() {
 	);
 }
 
-function libcatalog_xtest() {
+function libcatalog_xtest($barcode = NULL) {
 	global $conf;
-	
-
+	dpm($barcode);
 	# http://dev.library.duke.edu/apps/locationguide/find/HBBQ-7285-00001__
 
 	# create a model for Location Map
 	
 	$model = new LocMapManager();
-	//$locMap = $model->getLocationMapByBarcode('HBBQ-7285-00001__');
 	
 	try {
-		$locMap = $model->getLocationMapByBarcode('D01957471Y__');
+		$locMap = $model->getLocationMapByBarcode($barcode);
 		if (!is_null($locMap->areaMap)) {
 			dpm($locMap->areaMap);
 		} elseif(!is_null($locMap->externalLink)) {
@@ -67,23 +58,8 @@ function libcatalog_xtest() {
 	return 'Happy';
 }
 
-function libcatalog_find_label($label) {
-	return 'Happy';
-}
-
-function libcatalog_find_barcode($barcode) {
-	# emulate the Django project's barcode retrieval
-	# http://dev.library.duke.edu/apps/locationguide/find/HBBQ-7285-00001__
-
-	# create a model for Location Map
-	$model = new LocMapManager();
-	$locMap = $model->getLocationMapByBarcode($barcode);
-	if (!is_null($locMap->areamap)) {
-		dpm($locMap->areamap);
-		return theme('area-map', array('areaMap' => $locMap));
-	} elseif (!is_null($locMap->externalLink)) {
-		return theme('external-link', array('extLink' => $locMap));
-	}
-
-	return 'Happy';
+function libcatalog_xtitle_test($sysno) {
+	#http://search.library.duke.edu/search?id=DUKE002924985
+	$bibTitle = BibTitle::newBibTitleFromSysNo($sysno);
+	return 'Hello';
 }

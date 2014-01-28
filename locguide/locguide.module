@@ -43,6 +43,18 @@ function locguide_menu() {
 		'file' => 'locguide.pages.areamap.inc',
 		'access callback' => TRUE,
 	);
+	$items['find/barcode'] = array(
+		'page callback' => 'locguide_find_barcode',
+		'title' => 'Find Barcode',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,
+	);
+	$items['find/label'] = array(
+		'page callback' => 'locguide_find_label',
+		'title' => 'Find by Label',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,
+	);
 
 	return $items;
 }
@@ -62,11 +74,21 @@ function locguide_permission() {
 /**
  * Implements hook_theme()
  */
-function locguide_theme() {
+function locguide_theme($existing, $type, $theme, $path) {
 	$items['areamap'] = array(
 		'function' => 'locguide_theme_areamap',
 		'file' => 'locguide.pages.areamap.inc',
 		'variables' => array('areamap' => NULL),
+	);
+	$items['area-map'] = array(
+		'template' => 'area-map',
+		'variables' => array('locMap' => NULL),
+		'path' => $path . '/theme',
+	);
+	$items['external-link'] = array(
+		'template' => 'external-link',
+		'variables' => array('extLink' => NULL),
+		'path' => $path . '/theme',
 	);
 	return $items;
 }
@@ -86,4 +108,27 @@ function locguide_areamap_load($areamap_id) {
 
 	db_set_active();
 	return $o;
+}
+
+function locguide_find_label($label) {
+	return 'Happy';
+}
+
+function locguide_find_barcode($barcode) {
+	# emulate the Django project's barcode retrieval
+	# http://dev.library.duke.edu/apps/locationguide/find/HBBQ-7285-00001__
+
+	# create a model for Location Map
+	$model = new LocMapManager();
+	$locMap = $model->getLocationMapByBarcode($barcode);
+	if (!is_null($locMap->areaMap)) {
+		dpm($locMap->areaMap);
+		return theme('area-map', array('areaMap' => $locMap));
+	} elseif (!is_null($locMap->externalLink)) {
+		dpm($locMap->externalLink);		
+		drupal_set_title($locMap->externalLink->extlink_title);
+		return theme('external-link', array('extLink' => $locMap->externalLink));
+	}
+
+	return 'Happy';
 }

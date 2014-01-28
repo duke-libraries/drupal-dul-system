@@ -6,8 +6,8 @@
  */
 ?>
 <div class="externallink_content">
-	<?php print t($extLink->extlink_content); ?>
+	<p><?php print t($extLink->generic_msg_content); ?></p>
 </div>
 <div class="externallink_url">
-	<a href="<?php print $extLink->extlink_url; ?>" target="_blank"><?php print $extLink->extlink_link_text; ?></a>
+	<a href="<?php print $extLink->extlink_url; ?>" target="_blank"><?php print $extLink->extlink_text; ?></a>
 </div>
