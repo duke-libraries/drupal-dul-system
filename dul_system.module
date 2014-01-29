@@ -161,6 +161,11 @@ function dul_system_theme($existing, $type, $theme, $path) {
 		'twitter-datagis' => array(
 			'template' => 'twitter-datagis',
 		),
+
+		'modal-popup-first-visit' => array(
+			'template' => 'modal-popup-first-visit',
+			'path' => $path . '/theme',
+		),
 	);
 }	
 
@@ -394,17 +399,27 @@ function dul_system_menu_alter(&$items) {
  * Implements hook_page_alter()
  */
 function dul_system_page_alter(&$page) {
-	dpm($_SERVER);
+	if (module_exists('duluser')) {
+		global $user;
+		if (is_first_time_login($user)) {
+			$page['modal_popup']['usermsg'] = array(
+				'#theme' => 'modal-popup-first-visit',
+				'#attached' => array(
+					'js' => array(drupal_get_path('module', 'dul_system') . '/js/modal_popup.js'),
+				),
+			);
+		}
+	}
+	/*
 	if (!empty($_SERVER['HTTPS'])) {
 		$page['modal_popup']['usermsg'] = array(
-			'#type' => 'markup',
-			'#markup' => '<p>' . t('This is a test of the emergency broadcasting system.  This is only a test...') . '</p>',
+			'#theme' => 'modal-popup-first-visit',
 			'#attached' => array(
 				'js' => array(drupal_get_path('module', 'dul_system') . '/js/modal_popup.js'),
-			)
+			),
 		);
-		dpm($page);
-	}	
+	}
+	*/
 }
 
 /**
