@@ -391,12 +391,30 @@ function dul_system_menu_alter(&$items) {
 }
 
 /**
+ * Implements hook_page_alter()
+ */
+function dul_system_page_alter(&$page) {
+	dpm($_SERVER);
+	if (!empty($_SERVER['HTTPS'])) {
+		$page['modal_popup']['usermsg'] = array(
+			'#type' => 'markup',
+			'#markup' => '<p>' . t('This is a test of the emergency broadcasting system.  This is only a test...') . '</p>',
+			'#attached' => array(
+				'js' => array(drupal_get_path('module', 'dul_system') . '/js/modal_popup.js'),
+			)
+		);
+		dpm($page);
+	}	
+}
+
+/**
  * Implements hook_preprocess()
  *
  * Add a variable named "library_address" that represents 
  * the address stored in the dul_system.footer_address system variable
  */
 function dul_system_preprocess(&$variables, $hook) {
+	
 	$variables['library_address'] = '';
 	if ($hook == 'region' && $variables['region'] == 'footer_contact') {
 		$variables['library_address'] = variable_get('dul_system.footer_address', '');
@@ -410,7 +428,7 @@ function dul_system_preprocess(&$variables, $hook) {
 	if ($hook == 'region' && $variables['region'] == 'megamenu') {
 		$variables['endeca_url'] = 'http://search.library.duke.edu/';
 		if (preg_match('/-pre/', $_SERVER['SERVER_NAME'])) {
-			$variables['endeca_url'] = 'http://search-dev.trln.org:8080/Sandbox_dukepre/';
+			$variables['endeca_url'] = 'http://search.library.duke.edu/duke-pre/';
 		}
 	}
 }

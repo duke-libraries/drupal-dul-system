@@ -1,0 +1,134 @@
+<?php
+
+/**
+ * Implements hook menu
+ */
+function locguide_menu() {
+	$items['admin/config/locguide'] = array(
+		'title' => 'Location Guides',
+		'description' => 'Adjust Location Guide Settings for Library Resources',
+		'position' => 'right',
+		'weight' => -5,
+		'page callback' => 'system_admin_menu_block_page',
+		'access arguments' => array('administer site configuration'),
+		'file' => 'system.admin.inc',
+		'file path' => drupal_get_path('module', 'system'),
+	);
+	$items['admin/config/locguide/areamaps'] = array(
+		'page callback' => 'locguide_admin_areamaps',
+		'file' => 'locguide.admin.inc',
+		'title' => 'Area Maps',
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_NORMAL_ITEM,
+	);
+	$items['admin/config/locguide/areamap/%locguide_areamap/edit'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_areamap_form', 4),
+		'file' => 'locguide.admin.inc',
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_LOCAL_TASK,
+	);
+	$items['admin/config/locguide/areamaps/new'] = array(
+		'type' => MENU_LOCAL_TASK,
+		'title' => 'New Area Map',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_areamap_form'),
+		'file' => 'locguide.admin.inc',
+		'access arguments' => array('administer site configuration'),
+	);
+	$items['areamap/%locguide_areamap'] = array(
+		'type' => MENU_CALLBACK,
+		'page callback' => 'locguide_areamap',
+		'page arguments' => array(1),
+		'file' => 'locguide.pages.areamap.inc',
+		'access callback' => TRUE,
+	);
+	$items['find/barcode'] = array(
+		'page callback' => 'locguide_find_barcode',
+		'title' => 'Find Barcode',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,
+	);
+	$items['find/label'] = array(
+		'page callback' => 'locguide_find_label',
+		'title' => 'Find by Label',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,
+	);
+
+	return $items;
+}
+
+/**
+ * Implements hook_permission()
+ */
+function locguide_permission() {
+	return array(
+		'administer location guides' => array(
+			'title' => t('Administer Location Guides'),
+			'description' => t('Perform administrative tasks for locations guides data'),
+		),
+	);
+}
+
+/**
+ * Implements hook_theme()
+ */
+function locguide_theme($existing, $type, $theme, $path) {
+	$items['areamap'] = array(
+		'function' => 'locguide_theme_areamap',
+		'file' => 'locguide.pages.areamap.inc',
+		'variables' => array('areamap' => NULL),
+	);
+	$items['area-map'] = array(
+		'template' => 'area-map',
+		'variables' => array('locMap' => NULL),
+		'path' => $path . '/theme',
+	);
+	$items['external-link'] = array(
+		'template' => 'external-link',
+		'variables' => array('extLink' => NULL),
+		'path' => $path . '/theme',
+	);
+	return $items;
+}
+
+/**
+ * Auto-loader for Area Map
+ */
+function locguide_areamap_load($areamap_id) {
+	db_set_active('locationguide');
+	$query = db_select('locationguide_areamap', 'am')
+		->fields('am')
+		->condition('am.id', $areamap_id);
+
+	$result = $query->execute();
+
+	$o = $result->fetchObject();
+
+	db_set_active();
+	return $o;
+}
+
+function locguide_find_label($label) {
+	return 'Happy';
+}
+
+function locguide_find_barcode($barcode) {
+	# emulate the Django project's barcode retrieval
+	# http://dev.library.duke.edu/apps/locationguide/find/HBBQ-7285-00001__
+
+	# create a model for Location Map
+	$model = new LocMapManager();
+	$locMap = $model->getLocationMapByBarcode($barcode);
+	if (!is_null($locMap->areaMap)) {
+		dpm($locMap->areaMap);
+		return theme('area-map', array('areaMap' => $locMap));
+	} elseif (!is_null($locMap->externalLink)) {
+		dpm($locMap->externalLink);		
+		drupal_set_title($locMap->externalLink->extlink_title);
+		return theme('external-link', array('extLink' => $locMap->externalLink));
+	}
+
+	return 'Happy';
+}
