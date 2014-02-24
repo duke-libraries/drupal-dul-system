@@ -71,6 +71,10 @@ function dul_system_menu() {
 			'page callback' => 'dul_system_500',
 			'access callback' => TRUE,
 		),
+		'whoops_gone' => array(
+			'page callback' => 'dul_system_410',
+			'access callback' => TRUE,
+		),
 		'about/staff/netid/%' => array(
 			'page callback' => 'dul_system_staff_netid',
 			'page arguments' => array(3),
@@ -157,7 +161,11 @@ function dul_system_theme($existing, $type, $theme, $path) {
 		'server_error' => array(
 			'template' => 'server_error',
 		),
-		
+	
+		'server_resource_gone' => array(
+			'template' => 'server_resource_gone',
+		),
+
 		'twitter-datagis' => array(
 			'template' => 'twitter-datagis',
 		),
@@ -200,6 +208,17 @@ function dul_system_500() {
 	$output = theme('server_error');
 	return $output;
 }
+
+/**
+ * Generates a response for HTTP 410 (Gone) errors
+ */
+function dul_system_410() {
+	drupal_set_title( t('') );
+
+	$output = theme('server_resource_gone');
+	return $output;
+}
+
 /**
  * Implements hook_permission()
  */
