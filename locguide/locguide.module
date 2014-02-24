@@ -36,6 +36,15 @@ function locguide_menu() {
 		'file' => 'locguide.admin.inc',
 		'access arguments' => array('administer site configuration'),
 	);
+	$items['admin/config/locguide/locmaps'] = array(
+		'type' => MENU_LOCAL_TASK,
+		'title' => 'Location Maps Manager',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_locmaps'),
+		'file' => 'locguide.locmap.admin.inc',
+		'access arguments' => array('administer site configuration'),
+	);
+
 	$items['areamap/%locguide_areamap'] = array(
 		'type' => MENU_CALLBACK,
 		'page callback' => 'locguide_areamap',
