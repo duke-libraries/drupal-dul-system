@@ -59,7 +59,7 @@ function dul_system_menu() {
 			'page callback' => 'dul_system_403',
 			'access callback' => TRUE,
 		),
-		'whoops_unauthorized' => array(
+		'unauthorized' => array(
 			'page callback' => 'dul_system_403',
 			'access callback' => TRUE,
 		),
@@ -170,12 +170,38 @@ function dul_system_theme($existing, $type, $theme, $path) {
 			'template' => 'twitter-datagis',
 		),
 
+		'unauthorized' => array(
+			'template' => 'unauthorized',
+		),
+
 		'modal-popup-first-visit' => array(
 			'template' => 'modal-popup-first-visit',
 			'path' => $path . '/theme',
 		),
 	);
-}	
+}
+
+/**
+ * Implements hook_ctools_plugin_directory() to let the (ctools) system know
+ * the location of plugins.
+ */
+/* 
+function dul_system_ctools_plugin_directory($owner, $plugin_type) {
+	#if ($owner == 'ctools' && $plugin_type == 'access') {
+	#	return 'plugins/' . $plugin_type;
+	#}
+}
+*/
+
+/*
+function dul_system_ctools_plugin_type() {
+	return array(
+		'tasks' => array(),
+		'task_handlers' => array(),
+		'page_wizards' => array(),
+	);
+}
+*/
 
 /**
  * Generates the 404 response
@@ -195,7 +221,7 @@ function dul_system_404() {
 function dul_system_403() {
 	drupal_set_title( t('Unauthorized Request') );
 
-	$output = theme('oh-snap');
+	$output = theme('unauthorized');
 	return $output;
 }
 
