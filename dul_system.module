@@ -550,6 +550,7 @@ function dul_system_person_load($person_id) {
 		// pass
 	}
 	$person->physical_address = preg_replace('/\$/', "\n<br />", $person->physical_address);
+	$person->campus_box = preg_replace('/^(.+)([\d]{5})([\d]{4})$/', '$\1$\2-$\3', $person->campus_box);
 	$person->campus_box = preg_replace('/\$/', " ", $person->campus_box);
 	return $person;
 
