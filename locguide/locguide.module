@@ -14,12 +14,20 @@ function locguide_menu() {
 		'file' => 'system.admin.inc',
 		'file path' => drupal_get_path('module', 'system'),
 	);
-	$items['admin/config/locguide/areamaps'] = array(
+	$items['admin/config/locguide/areamap'] = array(
 		'page callback' => 'locguide_admin_areamaps',
 		'file' => 'locguide.admin.inc',
 		'title' => 'Area Maps',
 		'access arguments' => array('administer site configuration'),
 		'type' => MENU_NORMAL_ITEM,
+	);
+	$items['admin/config/locguide/areamap/new'] = array(
+		'type' => MENU_LOCAL_TASK,
+		'title' => 'New Area Map',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_areamap_form'),
+		'file' => 'locguide.admin.inc',
+		'access arguments' => array('administer site configuration'),
 	);
 	$items['admin/config/locguide/areamap/%locguide_areamap/edit'] = array(
 		'page callback' => 'drupal_get_form',
@@ -28,23 +36,56 @@ function locguide_menu() {
 		'access arguments' => array('administer site configuration'),
 		'type' => MENU_LOCAL_TASK,
 	);
-	$items['admin/config/locguide/areamaps/new'] = array(
-		'type' => MENU_LOCAL_TASK,
-		'title' => 'New Area Map',
-		'page callback' => 'drupal_get_form',
-		'page arguments' => array('locguide_admin_areamap_form'),
-		'file' => 'locguide.admin.inc',
-		'access arguments' => array('administer site configuration'),
-	);
-	$items['admin/config/locguide/locmaps'] = array(
-		'type' => MENU_LOCAL_TASK,
-		'title' => 'Location Maps Manager',
+	$items['admin/config/locguide/locmap'] = array(
+		'type' => MENU_NORMAL_ITEM,
+		'title' => 'Location Maps',
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('locguide_admin_locmaps'),
 		'file' => 'locguide.locmap.admin.inc',
 		'access arguments' => array('administer site configuration'),
 	);
-
+	$items['admin/config/locguide/collgroup'] = array(
+		'page callback' => 'locguide_admin_collgroups',
+		'title' => 'Collection Groups',
+		'file' => 'locguide.collgroup.admin.inc',
+		'access arguments' => array('administer site configuration'),
+	);
+	$items['admin/config/locguide/collgroup/new'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_collgroup_form', 'new', locguide_admin_model_data('collgroup_form')),
+		'title' => 'Create Collection Group',
+		'file' => 'locguide.collgroup.admin.inc',
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_LOCAL_ACTION,
+	);
+	$items['admin/config/locguide/collgroup/%locguide_collgroup/edit'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_collgroup_form', 4, locguide_admin_model_data('collgroup_form')),
+		'title' => 'Edit Collection Group',
+		'file' => 'locguide.collgroup.admin.inc',
+		'access arguments' => array('administer site configuration'),
+	);
+	$items['admin/config/locguide/sublibrary'] = array(
+		'page callback' => 'locguide_admin_sublibraries',
+		'title' => 'Sublibraries',
+		'file' => 'locguide.sublibrary.admin.inc',
+		'access arguments' => array('administer site configuration'),
+	);
+	$items['admin/config/locguide/sublibrary/new'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_collgroup_form', 'new', locguide_admin_model_data('sublibrary_form')),
+		'title' => 'Create Sublibrary',
+		'file' => 'locguide.sublibrary.admin.inc',
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_LOCAL_ACTION,
+	);
+	$items['admin/config/locguide/sublibrary/%locguide_sublibrary/edit'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_sublibrary_form', 4, locguide_admin_model_data('sublibrary_form')),
+		'title' => 'Edit Sublibrary',
+		'file' => 'locguide.sublibrary.admin.inc',
+		'access arguments' => array('administer site configuration'),
+	);
 	$items['areamap/%locguide_areamap'] = array(
 		'type' => MENU_CALLBACK,
 		'page callback' => 'locguide_areamap',
@@ -103,6 +144,28 @@ function locguide_theme($existing, $type, $theme, $path) {
 }
 
 /**
+ * Model data for various admin forms
+ */
+function locguide_admin_model_data($context) {
+	$model = array();
+	if ($context == 'collgroup_form') {
+		$sublibraries = SubLibrary::sublibraries(1);
+		foreach ($sublibraries as $sl) {
+			$model['options']['sublibrary'][$sl->id] = $sl->label;
+		}
+	}
+	if ($context == 'sublibrary_form') {
+		$locationmaps = LocMapManager::locationMaps();
+		foreach ($locationmaps as $l) {
+			$model['options']['locationmap'][$l->id] = sprintf("%s %s", $l->sublibrary_label, $l->collgroup_description);
+		}
+	}
+	if ($context == 'locmap_form') {
+		
+	}
+	return $model;
+}
+/**
  * Auto-loader for Area Map
  */
 function locguide_areamap_load($areamap_id) {
@@ -117,6 +180,34 @@ function locguide_areamap_load($areamap_id) {
 
 	db_set_active();
 	return $o;
+}
+
+/**
+ * Auto-loader for Collection Group
+ */
+function locguide_collgroup_load($id) {
+	db_set_active('locationguide');
+	$query = db_select('locationguide_collectiongroup', 'cg')
+		->fields('cg')
+		->condition('cg.id', $id);
+	$result = $query->execute();
+	$o = $result->fetchObject();
+	db_set_active();
+	return $o;
+}
+
+/**
+ * Auto-loader for Sublibrary
+ */
+function locguide_sublibrary_load($id) {
+	db_set_active('locationguide');
+	$query = db_select('locationguide_sublibrary', 'sl')
+		->fields('sl')
+		->condition('sl.id', $id);
+	$result = $query->execute();
+	$o = $result->fetchObject();
+	db_set_active();
+	return $o;	
 }
 
 function locguide_find_label($label) {

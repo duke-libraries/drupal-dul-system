@@ -2,6 +2,26 @@
 include_once('locguide.model.helpers.inc');
 class LocMapManager {
 
+	function locationMaps() {
+		db_set_active('locationguide');
+		
+		$query = db_select('locationguide_locationmap', 'lm')->fields('lm');
+		$query->leftJoin('locationguide_collectiongroup', 'cg', 'lm.collection_group_id = cg.id');
+		$query->leftJoin('locationguide_sublibrary', 'sl', 'cg.sublibrary_id = sl.id');
+		$query->addField('cg', 'description', 'collgroup_description');
+		$query->addField('sl', 'label', 'sublibrary_label');
+		$query->addField('sl', 'code', 'sublibrary_code');
+		$query->orderBy('sl.label');
+		
+		$result = $query->execute();
+		$locationmaps = array();
+		foreach ($result as $l) {
+			$locationmaps[] = $l;
+		}
+		db_set_active();
+		return $locationmaps;
+	}
+	
 	function getLocationMapByBarcode($barcode) {
 		global $conf;
 		
