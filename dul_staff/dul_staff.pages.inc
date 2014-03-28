@@ -81,7 +81,7 @@ function dul_staff_person(stdClass $person, $selector=NULL) {
 	}
 	
 	$page = array();
-	dpm($person);
+
 	$page['person'] = array(
 		'#theme' => 'staff_person',
 		'#person' => $person,
