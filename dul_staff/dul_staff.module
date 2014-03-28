@@ -162,7 +162,7 @@ function dul_staff_directory_submit($form, &$form_state) {
  * in hook_schema (see dul_system.install)
  */
 function dul_staff_person_load($person_id) {
-	db_set_active('locationguide');
+	db_set_active('django');
 	$result = db_query("SELECT * FROM {directory_person} p WHERE id = :person_id OR net_id = :netid", 
 		array(':person_id' => $person_id, ':netid' => $person_id));
 		
