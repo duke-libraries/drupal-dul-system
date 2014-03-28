@@ -1,0 +1,7 @@
+name = DUL Staff Directory
+description = Drupal-based implementation of Duke Library ITS Django web application
+core = 7.x
+package = Duke Libraries System
+dependencies[] = dul_system
+version = 0.1
+

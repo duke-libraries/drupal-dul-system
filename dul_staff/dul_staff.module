@@ -1,0 +1,312 @@
+<?php
+
+//include_once 'dul_staff.forms.inc';
+
+/**
+ * Implements hook_menu()
+ * add "Staff Directory"-related routing
+ */
+function dul_staff_menu() {
+	return array(
+		'admin/config/staff' => array(
+			'title' => 'Library Staff Directory',
+			'description' => 'Departments and Staff Management',
+			'position' => 'right',
+			'weight' => -5,
+			'page callback' => 'system_admin_menu_block_page',
+			'access arguments' => array('administer site configuration'),
+			'file' => 'system.admin.inc',
+			'file path' => drupal_get_path('module', 'system'),
+		),
+		'admin/config/staff/dept' => array(
+			'title' => 'Departments',
+			'description' => 'Set the address used in the footer of the website.',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('dul_staff_admin_staff_dept'),
+			'access arguments' => array('administer site configuration'),
+			'type' => MENU_NORMAL_ITEM,
+			'file' => 'dul_staff.admin.inc',
+		),
+		'admin/config/staff/dept/edit/%dul_staff_dept' => array(
+			'title callback' => 'dul_staff_dept_title',
+			'title arguments' => array(5),
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('dul_staff_admin_dept_form', 5, dul_staff_model_data('dept_edit')),
+			'access arguments' => array('administer site configuration'),
+			'file' => 'dul_staff.admin.inc',
+		),
+		'about/directory' => array(
+			'page callback' => 'dul_staff_directory',
+			'title' => 'Duke University Libraries Staff Directory',
+			'file' => 'dul_staff.pages.inc',
+			'access callback' => TRUE,
+		),
+		'about/directory/staff/%dul_staff_person' => array(
+			'page callback' => 'dul_staff_person',
+			'title callback' => 'dul_staff_person',
+			'title arguments' => array(3, 'title'),
+			'page arguments' => array(3),
+			'access callback' => TRUE,
+			'file' => 'dul_staff.pages.inc',
+		),
+		'about/staff/dept/%dul_staff_dept' => array(
+			'page callback' => 'dul_staff_page',
+			'page arguments' => array(3),
+			'file' => 'dul_staff.pages.inc',
+			'access callback' => TRUE,
+		),
+		'about/dept/%dul_staff_dept' => array(
+			'page callback' => 'dul_staff_page',
+			'page arguments' => array(2),
+			'file' => 'dul_staff.pages.inc',
+			'access callback' => TRUE,
+		),
+	);
+}
+
+/**
+ * Implements hook_theme()
+ * Defines custom themes here.
+ */
+function dul_staff_theme($existing, $type, $theme, $path) {
+	return array(
+		'staff_directory' => array(
+			'file' => 'dul_staff.theme.inc',
+			'variables' => array('top_dept' => NULL, 'reporting_depts' => NULL),
+		),
+		'staff_dept_address' => array(
+			'file' => 'dul_staff.theme.inc',
+			'variables' => array('dept' => NULL),
+		),	
+		'staff_person' => array(
+			'variables' => array('person' => NULL, 'settings' => array()),
+			'template' => 'staff_person',
+		),		
+		'core-services' => array(
+			'template' => 'dul_system-core-services',
+		),
+	);
+}
+
+
+/**
+ * Implements hook_form_alter for user profile form
+ */
+function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
+	//dpm($form);
+	// get the email address of the user in question so we can grab the netid
+	$mail = $form_state['user']->mail;
+	$pieces = explode("@", $mail);
+	$potential_netid = $pieces[0];
+		
+	// retrieve staff person 'profile' data and display as a field
+	db_set_active('django');
+	$result = db_query(
+		'SELECT p.* FROM {directory_person} p '
+		. 'WHERE net_id = :netid',
+		array(':netid' => $potential_netid));
+		
+	$person = $result->fetchObject();	
+	db_set_active();
+	
+	if (!is_null($person)) {
+		$form['staff_data'] = array(
+			'#type' => 'fieldset',
+			'#title' => t('Staff Directory Data'),
+			'#description' => t('This is the same data provided by the former Staff Directory (Django)'),
+			'#collapsible' => TRUE,
+			'#collapsed' => TRUE,
+			'#weight' => 2,
+		);
+		$form['staff_data']['profile'] = array(
+			'#type' => 'text_format',
+			'#default_value' => $person->profile,
+			'#title' => t('Profile'),
+			'#rows' => 15,
+		);
+		$form_state['staff_data']['profile_old'] = $person->profile;
+		$form_state['staff_data']['person_id'] = $person->id;
+		
+		$form['#submit'][] = 'dul_staff_staff_directory_submit';
+	}
+}
+
+/**
+ * Callback function for dul_staff_form_user_profile_form_alter
+ */
+function dul_staff_directory_submit($form, &$form_state) {
+	dpm($form_state['values']);
+	drupal_set_message("submitted staff data -- I hope");
+	if ($form_state['values']['profile']['value'] != $form_state['staff_data']['profile_old']) {
+		db_set_active('django');
+		$num_updated = db_update('directory_person')
+			->fields(array(
+				'profile' => $form_state['values']['profile']['value'],
+			))
+			->condition('id', $form_state['staff_data']['person_id'])
+			->execute();
+		db_set_active();
+		
+		if ($num_updated) {
+			drupal_set_message(t('Your profile information has been saved'));
+		}
+	}
+}
+
+
+/**
+ * Loader function for %person parameter/argument
+ * 
+ * Using 'db_query' instead of 'db_select' because the tables in 
+ * the 'locationguide' (django) databases aren't defined
+ * in hook_schema (see dul_system.install)
+ */
+function dul_staff_person_load($person_id) {
+	db_set_active('locationguide');
+	$result = db_query("SELECT * FROM {directory_person} p WHERE id = :person_id OR net_id = :netid", 
+		array(':person_id' => $person_id, ':netid' => $person_id));
+		
+	$person = $result->fetchObject();
+	
+	if (!is_null($person)) {
+		// load department names
+		$person->depts = array();
+		$person->subject_guides = array();
+		$result = db_query(
+			"SELECT o.* FROM {directory_orgunit} o "
+			. "LEFT JOIN {directory_orgunit_members} m ON m.orgunit_id = o.id "
+			. "WHERE m.person_id = :person_id",
+			array(':person_id' => $person->id));
+			
+		foreach ($result as $dept) {
+			$person->depts[] = $dept;
+		}
+		
+		// Load any related subject guides assigned to this person
+		$result = db_query(
+			"SELECT sg.* FROM {directory_subjectguide} sg "
+			. "WHERE person_id = :person_id "
+			. "ORDER BY sg.order",
+			array(':person_id' => $person->id));
+			
+		foreach ($result as $subjectguide) {
+			$person->subject_guides[] = $subjectguide;
+		}
+	}
+	db_set_active();
+	
+	$phys_address = explode('$', $person->physical_address);
+	try {
+		$person->address = $phys_address[0];
+	} catch(Exception $phys_exc) {
+		// pass
+	}
+	$person->physical_address = preg_replace('/\$/', "\n<br />", $person->physical_address);
+	$person->campus_box = preg_replace('/^(.+)([\d]{5})([\d]{4})$/', '$\1$\2-$\3', $person->campus_box);
+	$person->campus_box = preg_replace('/\$/', " ", $person->campus_box);
+	return $person;
+}
+
+/**
+ * Title callback function for person
+ */
+function dul_staff_dept_load($dept_id) {
+	db_set_active('django');
+	$q = db_select('directory_orgunit', 'd');
+	$q->fields('d');
+	$q->addField('d', 'email', 'url');
+	$q->leftJoin('directory_person', 's', 'd.head_id = s.id');
+	$q->fields('s');
+	$q->addField('s', 'email', 'dept_head_email');
+	$q->condition('d.id', $dept_id);
+	$res = $q->execute();
+	
+	$dept = $res->fetchObject();
+	$dept->members = array();
+	
+	$q = db_select('directory_person', 's');
+	$q->join('directory_orgunit_members', 'm', 'm.person_id = s.id');
+	$q->fields('s')
+		->condition('m.orgunit_id', $dept_id)
+		->orderBy('last_name')
+		->orderBy('first_name');
+	$res = $q->execute();
+	foreach ($res as $member) {
+		$dept->members[] = $member;
+	}
+	
+	if (count($dept->members) == 0 && $dept->parent_id == 1) {
+		$dept->allmembers = array();
+		$r = db_select('directory_orgunit', 'd')
+			->fields('d', array('id'))
+			->condition('parent_id', $dept->id)
+			->execute();
+			
+		foreach ($r as $child_dept) {
+			$s = db_select('directory_person', 's');
+			$s->join('directory_orgunit_members', 'dm', 'dm.person_id = s.id');
+			$s->fields('s');
+			$s->condition('dm.orgunit_id', $child_dept->id);
+			$rs = $s->execute();
+			foreach ($rs as $staff) {
+				$dept->members[] = $staff;
+				$dept->allmembers[] = $staff;
+			}
+		}
+	}
+	db_set_active();
+	return $dept;
+}
+
+/**
+ * Model data for various callbacks
+ */
+function dul_staff_model_data($context) {
+	$model = array();
+	switch ($context) {
+		case 'dept_edit':
+			$model['options']['dept'] = dul_staff_load_dept_options();
+			$model['options']['person'] = dul_staff_load_person_options();
+			break;
+	}
+	
+	return $model;
+}
+
+function dul_staff_load_dept_options() {
+	db_set_active('django');
+	$result = db_select('directory_orgunit', 'o')
+		->fields('o', array('id', 'name'))
+		->orderBy('name')
+		->execute();
+		
+	$options = array();
+	foreach ($result as $o) {
+		$options[$o->id] = $o->name;
+	}
+	db_set_active();
+	return $options;
+}
+
+function dul_staff_load_person_options() {
+	db_set_active('django');
+	$result = db_select('directory_person', 'p')
+		->fields('p', array('id', 'display_name'))
+		->orderBy('last_name', 'ASC')
+		->orderBy('first_name', 'ASC')
+		->execute();
+		
+	$options = array();
+	foreach ($result as $o) {
+		$options[$o->id] = $o->display_name;
+	}
+	db_set_active();
+	return $options;
+}
+
+/**
+ * Title callback
+ */
+function dul_staff_dept_title($dept) {
+	return $dept->name;
+}
