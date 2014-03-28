@@ -35,32 +35,6 @@ function dul_system_menu() {
 			'type' => MENU_NORMAL_ITEM,
 			'file' => 'dul_system.admin.inc',
 		),
-		'about/directory' => array(
-			'page callback' => 'dul_system_staff_directory',
-			'title' => 'Duke University Libraries Staff Directory',
-			'file' => 'dul_system.staff.inc',
-			'access callback' => TRUE,
-		),
-		'about/directory/staff/%dul_system_person' => array(
-			'page callback' => 'dul_system_staff_person',
-			'title callback' => 'dul_system_staff_person',
-			'title arguments' => array(3, 'title'),
-			'page arguments' => array(3),
-			'access callback' => TRUE,
-			'file' => 'dul_system.staff.inc',
-		),
-		'about/staff/dept/%dul_system_dept' => array(
-			'page callback' => 'dul_system_staff_page',
-			'page arguments' => array(3),
-			'file' => 'dul_system.staff.inc',
-			'access callback' => TRUE,
-		),
-		'about/dept/%dul_system_dept' => array(
-			'page callback' => 'dul_system_staff_page',
-			'page arguments' => array(2),
-			'file' => 'dul_system.staff.inc',
-			'access callback' => TRUE,
-		),
 		'error/404' => array(
 			'page callback' => 'dul_system_404',
 			'access callback' => TRUE,
@@ -135,23 +109,6 @@ function dul_system_theme($existing, $type, $theme, $path) {
 		),
 		'welcome-anonymous' => array(
 			'template' => 'welcome-anonymous'
-		),
-		'staff_directory' => array(
-			'file' => 'dul_system.staff.inc',
-			'variables' => array('top_dept' => NULL, 'reporting_depts' => NULL),
-		),
-		'staff_dept_address' => array(
-			'file' => 'dul_system.staff.inc',
-			'variables' => array('dept' => NULL),
-		),
-		
-		'staff_person' => array(
-			'variables' => array('person' => NULL, 'settings' => array()),
-			'template' => 'staff_person',
-		),
-		
-		'core-services' => array(
-			'template' => 'dul_system-core-services',
 		),
 
 		'oh-snap' => array(
@@ -500,123 +457,6 @@ function dul_system_cron() {
 	//$xslt = new XSLTProcessor();
 	//$content = file_get_contents('http://library.duke.edu/apps/directory/cms/feed.xml');
 	#print_r($content);
-}
-
-/**
- * Loader function for %person parameter/argument
- * 
- * Using 'db_query' instead of 'db_select' because the tables in 
- * the 'locationguide' (django) databases aren't defined
- * in hook_schema (see dul_system.install)
- */
-function dul_system_person_load($person_id) {
-	db_set_active('locationguide');
-	$result = db_query("SELECT * FROM {directory_person} p WHERE id = :person_id OR net_id = :netid", 
-		array(':person_id' => $person_id, ':netid' => $person_id));
-		
-	$person = $result->fetchObject();
-	
-	if (!is_null($person)) {
-		// load department names
-		$person->depts = array();
-		$person->subject_guides = array();
-		$result = db_query(
-			"SELECT o.* FROM {directory_orgunit} o "
-			. "LEFT JOIN {directory_orgunit_members} m ON m.orgunit_id = o.id "
-			. "WHERE m.person_id = :person_id",
-			array(':person_id' => $person->id));
-			
-		foreach ($result as $dept) {
-			$person->depts[] = $dept;
-		}
-		
-		// Load any related subject guides assigned to this person
-		$result = db_query(
-			"SELECT sg.* FROM {directory_subjectguide} sg "
-			. "WHERE person_id = :person_id "
-			. "ORDER BY sg.order",
-			array(':person_id' => $person->id));
-			
-		foreach ($result as $subjectguide) {
-			$person->subject_guides[] = $subjectguide;
-		}
-	}
-	db_set_active();
-	
-	$phys_address = explode('$', $person->physical_address);
-	try {
-		$person->address = $phys_address[0];
-	} catch(Exception $phys_exc) {
-		// pass
-	}
-	$person->physical_address = preg_replace('/\$/', "\n<br />", $person->physical_address);
-	$person->campus_box = preg_replace('/^(.+)([\d]{5})([\d]{4})$/', '$\1$\2-$\3', $person->campus_box);
-	$person->campus_box = preg_replace('/\$/', " ", $person->campus_box);
-	return $person;
-
-	/*
-	$q = db_select('staff', 's');
-	$q->fields('s');
-	$or = db_or();
-	$or->condition('person_id', $person_id);
-	$or->condition('netid', $person_id);
-	$q->condition($or);
-
-	$res = $q->execute();
-	$person = $res->fetchObject();
-
-	return $person;
-	*/
-}
-
-/**
- * Title callback function for person
- */
-function dul_system_dept_load($dept_id) {
-	$q = db_select('dul_dept', 'd');
-	$q->fields('d');
-	$q->addField('d', 'email', 'dept_email');
-	$q->leftJoin('staff', 's', 'd.head_person_id = s.person_id');
-	$q->fields('s');
-	$q->addField('s', 'email', 'dept_head_email');
-	$q->condition('dept_id', $dept_id);
-	$res = $q->execute();
-	
-	$dept = $res->fetchObject();
-	$dept->members = array();
-	
-	$q = db_select('staff', 's');
-	$q->join('dul_dept_member', 'm', 'm.person_id = s.person_id');
-	$q->fields('s')
-		->condition('m.did', $dept_id)
-		->orderBy('lastname')
-		->orderBy('firstname');
-	$res = $q->execute();
-	foreach ($res as $member) {
-		$dept->members[] = $member;
-	}
-	
-	if (count($dept->members == 0) && $dept->parent_did == 1) {
-		$dept->allmembers = array();
-		$r = db_select('dul_dept', 'd')
-			->fields('d', array('did', 'dept_id'))
-			->condition('parent_did', $dept->dept_id)
-			->execute();
-			
-		foreach ($r as $child_dept) {
-			$s = db_select('staff', 's');
-			$s->join('dul_dept_member', 'dm', 'dm.person_id = s.person_id');
-			$s->fields('s');
-			$s->condition('dm.did', $child_dept->dept_id);
-			$rs = $s->execute();
-			foreach ($rs as $staff) {
-				$dept->members[] = $staff;
-				$dept->allmembers[] = $staff;
-			}
-		}
-	}
-	
-	return $dept;
 }
 
 
