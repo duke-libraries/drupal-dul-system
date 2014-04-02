@@ -3,17 +3,17 @@
 function theme_staff_dept_address($variables) {
 	$dept = $variables['dept'];
 	$out = '<address>';
-	if ($dept->address != '') {
-		$out .= '<abbr title="Campus Box">CB:</abbr>' . $dept->address . '<br />';
+	if ($dept->physical_address != '') {
+		$out .= '<abbr title="Campus Box">CB</abbr>: ' . $dept->physical_address . '<br />';
 	}
 	if ($dept->phone != '') {
-		$out .= '<abbr title="Phone">P:</abbr>' . $dept->phone . '<br />';
+		$out .= '<abbr title="Phone">P</abbr>: ' . $dept->phone . '<br />';
 	}
 	if ($dept->fax != '') {
-		$out .= '<abbr title="Fax">F:</abbr>' . $dept->fax . '<br />';
+		$out .= '<abbr title="Fax">F</abbr>: ' . $dept->fax . '<br />';
 	}
 	if ($dept->dept_email != '') {
-		$out .= '<abbr title="Email">E:</abbr>' . $dept->dept_email;
+		$out .= '<abbr title="Email">E</abbr>: ' . $dept->dept_email;
 	}
 	$out .= '</address>';
 	return $out;

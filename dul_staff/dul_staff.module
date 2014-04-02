@@ -228,7 +228,7 @@ function dul_staff_dept_load($dept_id) {
 	db_set_active('django');
 	$q = db_select('directory_orgunit', 'd');
 	$q->fields('d');
-	$q->addField('d', 'email', 'url');
+	$q->addField('d', 'email', 'dept_email');
 	$q->leftJoin('directory_person', 's', 'd.head_id = s.id');
 	$q->fields('s');
 	$q->addField('s', 'email', 'dept_head_email');
@@ -236,6 +236,7 @@ function dul_staff_dept_load($dept_id) {
 	$res = $q->execute();
 	
 	$dept = $res->fetchObject();
+	$dept->physical_address = str_replace('$', ', ', $dept->physical_address);
 	$dept->members = array();
 	
 	$q = db_select('directory_person', 's');
