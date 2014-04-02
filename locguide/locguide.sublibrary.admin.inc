@@ -40,7 +40,7 @@ function locguide_admin_sublibrary_form($form, &$form_state, $sublibrary, $model
 	if (!isset($form_state['storage']['confirm'])) {
 		if ($sublibrary == 'new') {
 			$sublibrary = new stdClass;
-			$sublibrary->id = '';
+			$sublibrary->id = NULL;
 			$sublibrary->code = '';
 			$sublibrary->label = '';
 			$sublibrary->collgroup_choice = 0;
@@ -74,12 +74,16 @@ function locguide_admin_sublibrary_form($form, &$form_state, $sublibrary, $model
 			'#default_value' => $sublibrary->default_locmap_id,
 			'#title' => t('Default Location Map'),
 		);
+		$form['sublibrary_id'] = array(
+			'#type' => 'hidden',
+			'#value' => $sublibrary->id,
+		);
 		$form['actions'] = array(
 			'#type' => 'actions'
 		);
 		$form['actions']['submit'] = array(
 			'#type' => 'submit',
-			'#value' => t('Save Changes'),
+			'#value' => t('Submit'),
 		);
 		$form['actions']['cancel'] = array(
 			'#type' => 'markup',
@@ -102,5 +106,20 @@ function locguide_admin_sublibrary_form($form, &$form_state, $sublibrary, $model
 }
 
 function locguide_admin_sublibrary_form_submit($form, &$form_state) {
-	drupal_set_message('Faux save attempt');
+	if ($form_state['values']['op'] == 'Submit') {
+		db_set_active('locationguide');
+		$query = db_merge('locationguide_sublibrary')
+			->key(array('id' => $form_state['values']['sublibrary_id']))
+			->fields(array(
+				'id' => $form_state['values']['sublibrary_id'],
+				'default_locmap_id' => $form_state['values']['default_locmap_id'],
+				'collgroup_choice' => $form_state['values']['collgroup_choice'],
+				'code' => $form_state['values']['code'],
+				'label' => $form_state['values']['label'],
+			));
+			
+		$result = $query->execute();
+		db_set_active();
+		drupal_set_message('Changes have been saved.');
+	}
 }

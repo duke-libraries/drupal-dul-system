@@ -8,7 +8,7 @@ function locguide_admin_collgroups() {
 	//$collgroups = CollectionGroupManager::collectionGroups(NULL, TRUE);
 	
 	db_set_active('locationguide');
-	$query = db_select('locationguide_collectiongroup', 'cg')->extend('PagerDefault')->limit(25);
+	$query = db_select('locationguide_collectiongroup', 'cg')->extend('PagerDefault')->limit(15);
 	$query->fields('cg');
 	$query->leftJoin('locationguide_sublibrary', 'sl', 'sl.id = cg.sublibrary_id');
 	$query->addField('sl', 'code');
@@ -46,7 +46,7 @@ function locguide_admin_collgroups() {
 function locguide_admin_collgroup_form($form, &$form_state, $collgroup, $model) {
 	if ($collgroup == 'new') {
 		$collgroup = new stdClass;
-		$collgroup->id = '';
+		$collgroup->id = NULL;
 		$collgroup->description = '';
 		$collgroup->sublibrary_id = '';
 		$form_state['collgroup']['new'] = TRUE;
@@ -75,7 +75,7 @@ function locguide_admin_collgroup_form($form, &$form_state, $collgroup, $model) 
 	);
 	$form['actions']['submit'] = array(
 		'#type' => 'submit',
-		'#value' => t('Save Changes'),
+		'#value' => t('Submit'),
 	);
 	#$form['actions']['delete'] = array(
 	#	'#type' => 'submit',
@@ -86,4 +86,29 @@ function locguide_admin_collgroup_form($form, &$form_state, $collgroup, $model) 
 		'#markup' => l(t('Cancel'), 'admin/config/locguide/collgroup'),
 	);
 	return $form;
+}
+
+/**
+ * Submit handler for locguide_admin_collgroup_form
+ */
+function locguide_admin_collgroup_form_submit($form, &$form_state) {
+	if ($form_state['values']['op'] == 'Submit') {
+		// save record
+		db_set_active('locationguide');
+		$query = db_merge('locationguide_collectiongroup')
+			->key(array('id' => $form_state['values']['collgroup_id']))
+			->fields(array(
+				'id' => $form_state['values']['collgroup_id'],
+				'description' => $form_state['values']['description'],
+				'sublibrary_id' => $form_state['values']['sublibrary_id']
+			));
+			
+		$result = $query->execute();
+
+		dpm(_locguide_load_content_types());
+		
+		db_set_active();
+		drupal_set_message('Changes have been saved.');
+		$form_state['redirect'] = 'admin/config/locguide/collgroup';
+	}
 }
