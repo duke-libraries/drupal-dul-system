@@ -155,11 +155,11 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 		return $dept->title;
 	}
 
-	drupal_set_title($dept->title);
+	drupal_set_title($dept->name);
 	
 	$dept_head_html = '<h3>' . t($dept->display_name);
-	if ($dept->title != '') {
-		$dept_head_html .= ', <small><em>' . t($dept->title) . '</em></small>';
+	if ($dept->head_title != '') {
+		$dept_head_html .= ', <small><em>' . t($dept->head_title) . '</em></small>';
 	}
 	$dept_head_html .= '</h3>';
 	
