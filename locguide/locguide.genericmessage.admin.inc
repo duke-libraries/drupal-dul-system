@@ -6,26 +6,25 @@
 function locguide_admin_genericmessages() {
 	
 	db_set_active('locationguide');
-	$query = db_select('locationguide_sublibrary', 'sl')->extend('PagerDefault')->limit(15);
-	$query->fields('sl');
-	$query->orderBy('sl.label');
+	$query = db_select('locationguide_genericmessage', 'm')->extend('PagerDefault')->limit(15);
+	$query->fields('m');
+	$query->orderBy('m.label');
 	$result = $query->execute();
 	
 	$rows = array();
-	foreach($result as $sl) {
+	foreach($result as $message) {
 		$rows[] = array(
-			t($sl->label),
-			$sl->collgroup_choice ? t('Yes') : t('No'),
-			l(t('Edit'), 'admin/config/locguide/sublibrary/' . $sl->id . '/edit'),
+			t($message->label),
+			l(t('edit'), 'admin/config/locguide/genericmessage/' . $message->id . '/edit'),
 		);
 	}
 	db_set_active();
 	
 	$page['table'] = array(
 		'#theme' => 'table',
-		'#header' => array(t('Sublibrary'), t('Collection Group Choice'), t('Action(s)')),
+		'#header' => array(t('Label'), t('Action(s)')),
 		'#rows' => $rows,
-		'#empty' => t('No Sublibrary records were discovered.'),
+		'#empty' => t('No Generic Message records were discovered.'),
 	);
 	$page['pager'] = array(
 		'#theme' => 'pager',
@@ -41,38 +40,23 @@ function locguide_admin_genericmessage_form($form, &$form_state, $genericmessage
 		if ($genericmessage == 'new') {
 			$genericmessage = new stdClass;
 			$genericmessage->id = '';
-			$genericmessage->code = '';
+			$genericmessage->content = '';
 			$genericmessage->label = '';
-			$genericmessage->collgroup_choice = 0;
-			$genericmessage->default_locmap_id = NULL;
 			$form_state['genericmessage']['new'] = TRUE;
 		}
 		$form_state['referer'] = $_SERVER['HTTP_REFERER'];
-		$form['code'] = array(
-			'#type' => 'textfield',
-			'#title' => t('Code'),
-			'#default_value' => $genericmessage->code,
-			'#required' => TRUE,
-		);
 		$form['label'] = array(
 			'#type' => 'textfield',
 			'#title' => t('Label'),
+			'#description' => t('Brief identifier for use in selection lists.'),
 			'#default_value' => $genericmessage->label,
 			'#required' => TRUE,
 		);
-		$form['collgroup_choice'] = array(
-			'#type' => 'checkbox',
-			'#value' => $genericmessage->collgroup_choice,
-			'#title' => t('Collection Group Choice'),
-			'#description' => t('Include in SubLibrary selection list for Collection Groups.'),
-		);
-		$form['default_locmap_id'] = array(
-			'#type' => 'select',
-			'#options' => $model['options']['locationmap'],
-			'#empty_value' => t(''),
-			'#empty_option' => t('-- Select Location Map --'),
-			'#default_value' => $genericmessage->default_locmap_id,
-			'#title' => t('Default Location Map'),
+		$form['content'] = array(
+			'#type' => 'textarea',
+			'#title' => t('Content'),
+			'#default_value' => $genericmessage->content,
+			'#required' => TRUE,
 		);
 		$form['actions'] = array(
 			'#type' => 'actions'
@@ -94,13 +78,13 @@ function locguide_admin_genericmessage_form($form, &$form_state, $genericmessage
 		$path = current_path();
 		return confirm_form(
 			$form, 
-			t('Are you sure you want to delete this Sublibrary...?'), 
+			t('Are you sure you want to delete this Generic Message...?'), 
 			$path,
 			t('This action can not be undone.')
 		);
 	}
 }
 
-function locguide_admin_sublibrary_form_submit($form, &$form_state) {
+function locguide_admin_genericmessage_form_submit($form, &$form_state) {
 	drupal_set_message('Faux save attempt');
 }

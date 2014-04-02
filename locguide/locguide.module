@@ -73,7 +73,7 @@ function locguide_menu() {
 	);
 	$items['admin/config/locguide/sublibrary/new'] = array(
 		'page callback' => 'drupal_get_form',
-		'page arguments' => array('locguide_admin_collgroup_form', 'new', locguide_admin_model_data('sublibrary_form')),
+		'page arguments' => array('locguide_admin_sublibrary_form', 'new', locguide_admin_model_data('sublibrary_form')),
 		'title' => 'Create Sublibrary',
 		'file' => 'locguide.sublibrary.admin.inc',
 		'access arguments' => array('administer site configuration'),
@@ -86,6 +86,50 @@ function locguide_menu() {
 		'file' => 'locguide.sublibrary.admin.inc',
 		'access arguments' => array('administer site configuration'),
 	);
+	$items['admin/config/locguide/externallink'] = array(
+		'page callback' => 'locguide_admin_externallinks',
+		'title' => 'External Links',
+		'file' => 'locguide.externallink.admin.inc',
+		'access arguments' => array('administer site configuration'),
+	);
+	$items['admin/config/locguide/externallink/new'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_externallink_form', 'new', locguide_admin_model_data('externallink_form')),
+		'title' => 'Create External Link',
+		'file' => 'locguide.externallink.admin.inc',
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_LOCAL_ACTION,
+	);
+	$items['admin/config/locguide/externallink/%locguide_externallink/edit'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_externallink_form', 4, locguide_admin_model_data('externallink_form')),
+		'title' => 'Edit External Link',
+		'file' => 'locguide.externallink.admin.inc',
+		'access arguments' => array('administer site configuration'),
+	);
+
+	$items['admin/config/locguide/genericmessage'] = array(
+		'page callback' => 'locguide_admin_genericmessages',
+		'title' => 'Generic Messages',
+		'file' => 'locguide.genericmessage.admin.inc',
+		'access arguments' => array('administer site configuration'),
+	);
+	$items['admin/config/locguide/genericmessage/new'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_genericmessage_form', 'new', locguide_admin_model_data('genericmessage_form')),
+		'title' => 'Create Generic Message',
+		'file' => 'locguide.genericmessage.admin.inc',
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_LOCAL_ACTION,
+	);
+	$items['admin/config/locguide/genericmessage/%locguide_genericmessage/edit'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_genericmessage_form', 4, locguide_admin_model_data('genericmessage_form')),
+		'title' => 'Edit Generic Message',
+		'file' => 'locguide.genericmessage.admin.inc',
+		'access arguments' => array('administer site configuration'),
+	);
+
 	$items['areamap/%locguide_areamap'] = array(
 		'type' => MENU_CALLBACK,
 		'page callback' => 'locguide_areamap',
@@ -119,6 +163,40 @@ function locguide_permission() {
 			'description' => t('Perform administrative tasks for locations guides data'),
 		),
 	);
+}
+
+/**
+ * Implements hook_init()
+ * load content_type/model mapping into session
+ */
+function locguide_init() {
+	if (path_is_admin(current_path()) && (strpos(current_path(), 'locguide') !== FALSE)) {
+		// load contents of django_content_type
+		_locguide_load_content_types();
+	}
+}
+
+function _locguide_load_content_types() {
+	$content_type_data = &drupal_static(__FUNCTION__);
+	if (!isset($content_type_data)) {
+		if ($cache = cache_get('locguide_content_types')) {
+			$content_type_data = $cache->data;
+		} else {
+			$content_type_data = array();
+			db_set_active('locationguide');
+			
+			$result = db_select('django_content_type', 'ct')
+				->fields('ct')
+				->execute();
+			foreach ($result as $ctype) {
+				$key = sprintf("%s:%s", $ctype->app_label, $ctype->model);
+				$content_type_data[$key] = $ctype;
+			}
+			db_set_active();
+			cache_set('locguide_content_types', $content_type_data, 'cache');
+		}
+	}
+	return $content_type_data;
 }
 
 /**
@@ -163,6 +241,12 @@ function locguide_admin_model_data($context) {
 	if ($context == 'locmap_form') {
 		
 	}
+	if ($context == 'externallink_form') {
+		$genericmessges = GenericMessage::genericMessages();
+		foreach ($genericmessges as $m) {
+			$model['options']['genericmessage'][$m->id] = $m->label;
+		}
+	}
 	return $model;
 }
 /**
@@ -206,6 +290,45 @@ function locguide_sublibrary_load($id) {
 		->condition('sl.id', $id);
 	$result = $query->execute();
 	$o = $result->fetchObject();
+	db_set_active();
+	return $o;	
+}
+
+/**
+ * Auto-loader for Generic Message
+ */
+function locguide_genericmessage_load($id) {
+	db_set_active('locationguide');
+	$query = db_select('locationguide_genericmessage', 'm')
+		->fields('m')
+		->condition('m.id', $id);
+	$result = $query->execute();
+	$o = $result->fetchObject();
+	$o->external_links = array();
+	
+	$result = db_select('locationguide_externallink', 'e')
+		->fields('e')
+		->condition('e.generic_msg_id', $id)
+		->orderBy('e.title')
+		->execute();
+	foreach ($result as $extlink) {
+		$o->external_links[] = $extlink;
+	}
+	db_set_active();
+	return $o;	
+}
+
+/**
+ * Auto-loader for Generic Message
+ */
+function locguide_externallink_load($id) {
+	db_set_active('locationguide');
+	$query = db_select('locationguide_externallink', 'm')
+		->fields('m')
+		->condition('m.id', $id);
+	$result = $query->execute();
+	$o = $result->fetchObject();
+	$o->external_links = array();
 	db_set_active();
 	return $o;	
 }
