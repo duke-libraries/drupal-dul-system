@@ -65,6 +65,14 @@ function dul_staff_staff_overview() {
 }
 
 /**
+ * Page callback for department overview
+ */
+function dul_staff_dept_overview() {
+	$page = array();
+	return $page;
+}
+
+/**
  * Page callback that displays a Staff Person or returns the 
  * DisplayName of the Staff Person as a 'title' in response to 
  * a 'title callback'
@@ -142,12 +150,16 @@ function dul_staff_page2($dept) {
 	return print_r($dept, TRUE);
 }
 
-function dul_staff_page($dept) {
+function dul_staff_dept(stdClass $dept, $selector=NULL) {
+	if ($selector == 'title') {
+		return $dept->title;
+	}
+
 	drupal_set_title($dept->title);
 	
-	$dept_head_html = '<h3>' . t($dept->displayname);
-	if ($dept->jobtitle != '') {
-		$dept_head_html .= ', <small><em>' . t($dept->jobtitle) . '</em></small>';
+	$dept_head_html = '<h3>' . t($dept->display_name);
+	if ($dept->title != '') {
+		$dept_head_html .= ', <small><em>' . t($dept->title) . '</em></small>';
 	}
 	$dept_head_html .= '</h3>';
 	
@@ -170,11 +182,11 @@ function dul_staff_page($dept) {
 	$rows = array();
 	foreach ($dept->members as $member) {
 		$row = array();
-		$row[] = l(t($member->displayname), 'http://library.duke.edu/apps/directory/staff/' . $member->person_id);
+		$row[] = l(t($member->display_name), 'about/directory/staff/' . $member->id);
 		#$row[] = $member->displayname;
-		$row[] = $member->jobtitle;
+		$row[] = $member->title;
 		$row[] = $member->phone;
-		$row[] = ($member->email_privacy == 'False') ? $member->email : '';
+		$row[] = ($member->email_privacy == NULL) ? $member->email : '';
 		$rows[] = array(
 			'data' => $row,
 		);

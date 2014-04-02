@@ -55,18 +55,26 @@ function dul_staff_menu() {
 			'access callback' => TRUE,
 			'file' => 'dul_staff.pages.inc',
 		),
-		'about/staff/dept/%dul_staff_dept' => array(
-			'page callback' => 'dul_staff_page',
+		'about/directory/dept' => array(
+			'page callback' => 'dul_staff_dept_overview',
+			'access callback' => TRUE,
+			'file' => 'dul_staff.pages.inc',
+			'title' => 'Departments',
+		),
+		'about/directory/dept/%dul_staff_dept' => array(
+			'page callback' => 'dul_staff_dept',
 			'page arguments' => array(3),
 			'file' => 'dul_staff.pages.inc',
 			'access callback' => TRUE,
+			'title callback' => 'dul_staff_dept',
+			'title arguments' => array(3, 'title'),
 		),
-		'about/dept/%dul_staff_dept' => array(
-			'page callback' => 'dul_staff_page',
-			'page arguments' => array(2),
-			'file' => 'dul_staff.pages.inc',
-			'access callback' => TRUE,
-		),
+		//'about/dept/%dul_staff_dept' => array(
+		//	'page callback' => 'dul_staff_page',
+		//	'page arguments' => array(2),
+		//	'file' => 'dul_staff.pages.inc',
+		//	'access callback' => TRUE,
+		//),
 	);
 }
 

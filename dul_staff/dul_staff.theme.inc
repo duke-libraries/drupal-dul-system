@@ -32,7 +32,7 @@ function theme_staff_directory($variables) {
 	foreach ($reporting_depts as $dept) {
 		$row = array(
 			'data' => array(
-				array('data' => l(t(strtoupper($dept->title)), 'about/dept/' . $dept->dept_id), 'colspan' => 3, 'header' => TRUE,),
+				array('data' => l(t(strtoupper($dept->title)), 'about/directory/dept/' . $dept->dept_id), 'colspan' => 3, 'header' => TRUE,),
 				array('data' => l(t($dept->head_displaytitle), 'about/directory/staff/' . $dept->head_person_id), 'header' => TRUE,),
 			),
 		);
@@ -40,7 +40,7 @@ function theme_staff_directory($variables) {
 		foreach ($dept->child_depts as $o) {
 			$rows[] = array(
 				'data' => array(
-					l(t($o->title), 'about/dept/' . $o->dept_id),
+					l(t($o->title), 'about/directory/dept/' . $o->dept_id),
 					t($o->phone),
 					t($o->address),
 					l(t($o->head_displaytitle), 'about/directory/staff/' . $o->head_person_id),
