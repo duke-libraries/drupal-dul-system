@@ -41,6 +41,12 @@ function dul_staff_menu() {
 			'file' => 'dul_staff.pages.inc',
 			'access callback' => TRUE,
 		),
+		'about/directory/staff' => array(
+			'title' => 'Library Staff',
+			'page callback' => 'dul_staff_staff_overview',
+			'access callback' => TRUE,
+			'file' => 'dul_staff.pages.inc',
+		),
 		'about/directory/staff/%dul_staff_person' => array(
 			'page callback' => 'dul_staff_person',
 			'title callback' => 'dul_staff_person',

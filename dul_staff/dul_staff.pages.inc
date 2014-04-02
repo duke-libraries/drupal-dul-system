@@ -55,6 +55,16 @@ function dul_staff_directory() {
 }
 
 /**
+ * Page callback for Staff overview
+ * Does nothing at the moment, although one could explore 
+ * implementing a search facility
+ */
+function dul_staff_staff_overview() {
+	$page = array();
+	return $page();
+}
+
+/**
  * Page callback that displays a Staff Person or returns the 
  * DisplayName of the Staff Person as a 'title' in response to 
  * a 'title callback'
