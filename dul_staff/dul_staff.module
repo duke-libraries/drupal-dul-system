@@ -37,12 +37,12 @@ function dul_staff_menu() {
 		),
 		'about/directory' => array(
 			'page callback' => 'dul_staff_directory',
-			'title' => 'Duke University Libraries Staff Directory',
+			'title' => 'Staff Directory',
 			'file' => 'dul_staff.pages.inc',
 			'access callback' => TRUE,
 		),
 		'about/directory/staff' => array(
-			'title' => 'Library Staff',
+			'title' => 'Staff',
 			'page callback' => 'dul_staff_staff_overview',
 			'access callback' => TRUE,
 			'file' => 'dul_staff.pages.inc',
