@@ -240,7 +240,6 @@ function dul_staff_dept_load($dept_id) {
 	$res = $q->execute();
 	
 	$dept = $res->fetchObject();
-	$dept->physical_address = str_replace('$', ', ', $dept->physical_address);
 	$dept->members = array();
 	$dept->allmembers = array();
 
@@ -295,7 +294,7 @@ function dul_staff_directory_tree() {
 	$directory_tree = &drupal_static(__FUNCTION__);
 	if (!isset($directory_tree)) {
 		if ($cache = cache_get('staff_directory_tree')) {
-			$directory_tree = $cache;
+			$directory_tree = $cache->data;
 		} else {
 			// do the heavy lifting database work here.
 			db_set_active('django');
