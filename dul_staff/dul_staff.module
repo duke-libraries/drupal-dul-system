@@ -149,7 +149,6 @@ function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
  * Callback function for dul_staff_form_user_profile_form_alter
  */
 function dul_staff_directory_submit($form, &$form_state) {
-	dpm($form_state['values']);
 	drupal_set_message("submitted staff data -- I hope");
 	if ($form_state['values']['profile']['value'] != $form_state['staff_data']['profile_old']) {
 		db_set_active('django');
@@ -294,10 +293,7 @@ function dul_staff_dept_load($dept_id) {
  */
 function dul_staff_directory_tree() {
 	$directory_tree = &drupal_static(__FUNCTION__);
-	unset($directory_tree);
-	cache_clear_all('staff_directory_tree', 'cache');
 	if (!isset($directory_tree)) {
-		
 		if ($cache = cache_get('staff_directory_tree')) {
 			$directory_tree = $cache;
 		} else {
