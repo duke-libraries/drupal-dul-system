@@ -3,52 +3,7 @@
 /**
  * Displays a high-level staff directory
  */
-function dul_staff_directory() {
-	// get the top level directory (parent = NULL)
-
-	# query the staff department table
-	/*
-	$q = db_select('dul_dept', 'd');
-	$q->leftJoin('staff', 's', 'd.head_person_id = s.person_id');
-	$q->fields('d');
-	$q->addField('s', 'displayname', 'head_displaytitle');
-	$q->addField('s', 'jobtitle', 'head_jobtitle');
-	$q->condition('parent_did', '0');
-	$res = $q->execute();
-		
-	$top_dept = $res->fetchObject();
-	
-	// next, get the departments directly underneath
-	$q = db_select('dul_dept', 'd');
-	$q->leftJoin('staff', 's', 'd.head_person_id = s.person_id');
-	$q->fields('d');
-	$q->addField('s', 'displayname', 'head_displaytitle');
-	$q->addField('s', 'jobtitle', 'head_jobtitle');
-	$q->addField('s', 'person_id', 'head_person_id');
-	$q->condition('parent_did', $top_dept->dept_id);
-	$res = $q->execute();
-	
-	$reporting_depts = array();
-	foreach ($res as $dept) {
-		$q = db_select('dul_dept', 'd');
-		$q->leftJoin('staff', 's', 'd.head_person_id = s.person_id');
-		$q->fields('d');
-		$q->addField('s', 'displayname', 'head_displaytitle');
-		$q->addField('s', 'jobtitle', 'head_jobtitle');
-		$q->addField('s', 'person_id', 'head_person_id');
-		$q->condition('parent_did', $dept->dept_id);
-		$q->orderBy('d.title');
-		$sub_res = $q->execute();
-		
-		$dept->child_depts = array();
-		foreach ($sub_res as $o) {
-			$dept->child_depts[] = $o;
-		}
-
-		$reporting_depts[] = $dept;
-	}
-	*/
-	
+function dul_staff_directory() {	
 	$tree = dul_staff_directory_tree();
 	return array(
 		'#theme' => 'staff_directory',
