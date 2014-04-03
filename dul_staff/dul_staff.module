@@ -228,48 +228,136 @@ function dul_staff_dept_load($dept_id) {
 	db_set_active('django');
 	$q = db_select('directory_orgunit', 'd');
 	$q->fields('d');
-	$q->addField('d', 'email', 'url');
+	$q->addField('d', 'email', 'dept_email');
 	$q->leftJoin('directory_person', 's', 'd.head_id = s.id');
-	$q->fields('s');
+	$q->addField('s', 'id', 'head_person_id');
+	$q->addField('s', 'display_name', 'head_display_name');
+	$q->addField('s', 'title', 'head_title');
+	$q->addField('s', 'preferred_title', 'head_preferred_title');
+	$q->addField('s', 'photo_url');
+	$q->addField('s', 'phone', 'head_phone');
 	$q->addField('s', 'email', 'dept_head_email');
 	$q->condition('d.id', $dept_id);
 	$res = $q->execute();
 	
 	$dept = $res->fetchObject();
 	$dept->members = array();
-	
-	$q = db_select('directory_person', 's');
-	$q->join('directory_orgunit_members', 'm', 'm.person_id = s.id');
-	$q->fields('s')
-		->condition('m.orgunit_id', $dept_id)
-		->orderBy('last_name')
-		->orderBy('first_name');
-	$res = $q->execute();
-	foreach ($res as $member) {
-		$dept->members[] = $member;
-	}
-	
-	if (count($dept->members) == 0 && $dept->parent_id == 1) {
-		$dept->allmembers = array();
+	$dept->allmembers = array();
+
+
+	if ($dept->parent_id == '1') {
+			
+		//$dept->allmembers = array();
 		$r = db_select('directory_orgunit', 'd')
-			->fields('d', array('id'))
+			->fields('d')
 			->condition('parent_id', $dept->id)
 			->execute();
 			
-		foreach ($r as $child_dept) {
-			$s = db_select('directory_person', 's');
-			$s->join('directory_orgunit_members', 'dm', 'dm.person_id = s.id');
-			$s->fields('s');
-			$s->condition('dm.orgunit_id', $child_dept->id);
-			$rs = $s->execute();
-			foreach ($rs as $staff) {
-				$dept->members[] = $staff;
-				$dept->allmembers[] = $staff;
-			}
+		$sq = db_select('directory_orgunit', 'ou')
+			->fields('ou', array('id'))
+			->condition('ou.parent_id', $dept->id);
+			
+		$r = db_select('directory_person', 's');
+		$r->join('directory_orgunit_members', 'om', 'om.person_id = s.id');
+		$r->fields('s');
+		$r->orderBy('s.last_name');
+		$r->orderBy('s.first_name');
+		$r->condition('om.orgunit_id', $sq, 'IN');
+		$rs = $r->execute();
+		foreach ($rs as $mem) {
+			$dept->members[] = $mem;
 		}
+		
+	} else {
+
+		$q = db_select('directory_person', 's');
+		$q->join('directory_orgunit_members', 'm', 'm.person_id = s.id');
+		$q->fields('s')
+			->condition('m.orgunit_id', $dept_id)
+			->orderBy('s.last_name')
+			->orderBy('s.first_name');
+
+		$res = $q->execute();
+		foreach ($res as $member) {
+			$dept->members[] = $member;
+		}
+		
 	}
 	db_set_active();
+
 	return $dept;
+}
+
+/**
+ * Staff Directory Tree data
+ */
+function dul_staff_directory_tree() {
+	$directory_tree = &drupal_static(__FUNCTION__);
+	unset($directory_tree);
+	cache_clear_all('staff_directory_tree', 'cache');
+	if (!isset($directory_tree)) {
+		
+		if ($cache = cache_get('staff_directory_tree')) {
+			$directory_tree = $cache;
+		} else {
+			// do the heavy lifting database work here.
+			db_set_active('django');
+			
+			$q = db_select('directory_orgunit', 'o');
+			$q->leftJoin('directory_person', 'p', 'p.id = o.head_id');
+			$q->fields('o');	// orgunit fields
+			$q->addField('p', 'display_name', 'head_display_name');
+			$q->addfield('p', 'title', 'head_jobtitle');
+			$q->addField('p', 'preferred_title', 'head_preferred_title');
+			$q->isNull('parent_id');
+			$res = $q->execute();
+			$top_dept = $res->fetchObject();
+			
+			// Generate list of departments reporting directly to
+			// "Perkins Library System"
+			$q = db_select('directory_orgunit', 'o');
+			#$q->join('directory_orgunit_members', 'om', 'o.head_id = om.orgunit_id');
+			$q->leftJoin('directory_person', 'p', 'p.id = o.head_id');
+			$q->fields('o');
+			$q->addField('p', 'display_name', 'head_display_name');
+			$q->addField('p', 'display_name', 'head_displaytitle');
+			$q->addfield('p', 'title', 'head_jobtitle');
+			$q->addField('p', 'preferred_title', 'head_preferred_title');
+			$q->addField('p', 'id', 'head_person_id');
+			$q->condition('parent_id', $top_dept->id);
+			$q->orderBy('o.name');
+			$res = $q->execute();
+			
+			$reporting_depts = array();
+			foreach ($res as $dept) {
+				$q = db_select('directory_orgunit', 'o');
+				#$q->join('directory_orgunit_members', 'om', 'o.head_id = om.orgunit_id');
+				$q->leftJoin('directory_person', 'p', 'p.id = o.head_id');
+				$q->fields('o');
+				$q->addField('p', 'display_name', 'head_display_name');
+				$q->addField('p', 'display_name', 'head_displaytitle');
+				$q->addfield('p', 'title', 'head_jobtitle');
+				$q->addField('p', 'preferred_title', 'head_preferred_title');
+				$q->addField('p', 'id', 'head_person_id');
+				$q->condition('parent_id', $dept->id);
+				$q->orderBy('o.name');
+				$sub_res = $q->execute();
+				$dept->child_depts = array();
+				
+				foreach ($sub_res as $o) {
+					$dept->child_depts[] = $o;
+				}
+				
+				$reporting_depts[] = $dept;
+			}
+			
+			$directory_tree['top_dept'] = $top_dept;
+			$directory_tree['reporting_depts'] = $reporting_depts;
+			db_set_active();
+			cache_set('staff_directory_tree', $directory_tree, 'cache');
+		}
+	}
+	return $directory_tree;
 }
 
 /**

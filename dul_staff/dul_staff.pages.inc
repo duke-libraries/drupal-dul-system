@@ -7,6 +7,7 @@ function dul_staff_directory() {
 	// get the top level directory (parent = NULL)
 
 	# query the staff department table
+	/*
 	$q = db_select('dul_dept', 'd');
 	$q->leftJoin('staff', 's', 'd.head_person_id = s.person_id');
 	$q->fields('d');
@@ -46,11 +47,13 @@ function dul_staff_directory() {
 
 		$reporting_depts[] = $dept;
 	}
+	*/
 	
+	$tree = dul_staff_directory_tree();
 	return array(
 		'#theme' => 'staff_directory',
-		'#top_dept' => $top_dept,
-		'#reporting_depts' => $reporting_depts, 
+		'#top_dept' => $tree['top_dept'],
+		'#reporting_depts' => $tree['reporting_depts'], 
 	);
 }
 
@@ -152,14 +155,14 @@ function dul_staff_page2($dept) {
 
 function dul_staff_dept(stdClass $dept, $selector=NULL) {
 	if ($selector == 'title') {
-		return $dept->title;
+		return $dept->name;
 	}
 
-	drupal_set_title($dept->title);
+	drupal_set_title($dept->name);
 	
-	$dept_head_html = '<h3>' . t($dept->display_name);
-	if ($dept->title != '') {
-		$dept_head_html .= ', <small><em>' . t($dept->title) . '</em></small>';
+	$dept_head_html = '<h3>' . t($dept->head_display_name) . '</h3>';
+	if ($dept->head_preferred_title != '') {
+		$dept_head_html .= '<em>' . t($dept->head_preferred_title) . '</em>';
 	}
 	$dept_head_html .= '</h3>';
 	
@@ -180,7 +183,7 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 		t('Email'),
 	);
 	$rows = array();
-	foreach ($dept->members as $member) {
+	foreach (array_merge($dept->members, $dept->allmembers) as $member) {
 		$row = array();
 		$row[] = l(t($member->display_name), 'about/directory/staff/' . $member->id);
 		#$row[] = $member->displayname;
@@ -195,7 +198,7 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 		'#theme' => 'table',
 		'#header' => $header,
 		'#rows' => $rows,
-		'#empty' => t('This department reportedly has no staff members.'),
+		'#empty' => t('This department does not appear to have any staff members.'),
 		'#attributes' => array(
 			'class' => array('table', 'table-condensed'),
 		)
