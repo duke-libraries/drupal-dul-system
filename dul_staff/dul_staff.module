@@ -2,6 +2,10 @@
 
 //include_once 'dul_staff.forms.inc';
 
+// Campus box regex patters
+define('CAMPUSBOX_REGEX', '/^(?P<campus_box>.+)\$(?P<city>\w+),\s?(?P<state>\w{2})\s?(?P<zip5>[\d]{5})(?P<zip4>[\d]{4})?$/');
+define('PHYSICAL_ADDR_REGEX', '/^(?P<office>.+)\$(?P<city>\w+),\s?(?P<state>\w{2})\s?(?P<zip5>[\d]{5})(?P<zip4>[\d]{4})?$/');
+
 /**
  * Implements hook_menu()
  * add "Staff Directory"-related routing
@@ -214,9 +218,37 @@ function dul_staff_person_load($person_id) {
 	} catch(Exception $phys_exc) {
 		// pass
 	}
-	$person->physical_address = preg_replace('/\$/', "\n<br />", $person->physical_address);
-	$person->campus_box = preg_replace('/^(.+)([\d]{5})([\d]{4})$/', '$\1$\2-$\3', $person->campus_box);
-	$person->campus_box = preg_replace('/\$/', " ", $person->campus_box);
+
+	$matches = array();
+	preg_match(CAMPUSBOX_REGEX, $person->campus_box, $matches);	// @see the top of this file
+	if (count($matches)) {
+		$person->postal_address = array();
+		
+		$person->postal_address['box'] = $matches['campus_box'];
+		$person->postal_address['zipcode'] = $matches['zip5'];
+		$person->postal_address['city'] = $matches['city'];
+		$person->postal_address['state'] = $matches['state'];
+		if (isset($matches['zip4'])) {
+			$person->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
+		}
+	}
+
+	preg_match(PHYSICAL_ADDR_REGEX, $person->physical_address, $matches);	// @see the top of this file
+	if (count($matches)) {
+		if (!isset($person->postal_address)) {
+			$person->postal_address = array();
+		}
+		$person->postal_address['office'] = $matches['office'];
+		$person->postal_address['state'] = $matches['state'];
+		$person->postal_address['city'] = $matches['city'];
+		
+		if (!isset($postal_address['zipcode'])) {
+			$person->postal_address['zipcode'] = $matches['zip5'];
+			if (isset($matches['zip4'])) {
+				$person->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
+			}
+		}
+	}
 	return $person;
 }
 
@@ -244,9 +276,9 @@ function dul_staff_dept_load($dept_id) {
 	$dept->allmembers = array();
 
 
+	// for departments directly under the Perkins Library System department (parent_id = 1)
+	// fetch every staff member for each child department
 	if ($dept->parent_id == '1') {
-			
-		//$dept->allmembers = array();
 		$r = db_select('directory_orgunit', 'd')
 			->fields('d')
 			->condition('parent_id', $dept->id)
@@ -268,7 +300,8 @@ function dul_staff_dept_load($dept_id) {
 		}
 		
 	} else {
-
+		// this is a child department whose parent is NOT 'Perkins Library System'
+		// so just fetch the members of this department.
 		$q = db_select('directory_person', 's');
 		$q->join('directory_orgunit_members', 'm', 'm.person_id = s.id');
 		$q->fields('s')
