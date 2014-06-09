@@ -279,6 +279,11 @@ function dul_staff_dept_load($dept_id) {
 	// for departments directly under the Perkins Library System department (parent_id = 1)
 	// fetch every staff member for each child department
 	if ($dept->parent_id == '1') {
+		// create this temporary array to keep track of 
+		// members as they are processed -- this is done 
+		// to eliminate duplicates
+		$processed_staff = array();
+
 		$r = db_select('directory_orgunit', 'd')
 			->fields('d')
 			->condition('parent_id', $dept->id)
@@ -296,7 +301,10 @@ function dul_staff_dept_load($dept_id) {
 		$r->condition('om.orgunit_id', $sq, 'IN');
 		$rs = $r->execute();
 		foreach ($rs as $mem) {
-			$dept->members[] = $mem;
+			if (!in_array($mem->id, $processed_staff)) {
+				$dept->members[] = $mem;
+				$processed_staff[] = $mem->id;
+			}
 		}
 		
 	} else {
