@@ -42,6 +42,7 @@ function dul_staff_dept_overview() {
  * @see dul_staff_person_load()
  */
 function dul_staff_person(stdClass $person, $selector=NULL) {
+	global $user;
 	if ($selector == 'title') {
 		return $person->display_name;
 	}
@@ -56,12 +57,21 @@ function dul_staff_person(stdClass $person, $selector=NULL) {
 		$tpl_settings['address_info_offset'] = 'offset1';
 	}
 	
+	$allow_user_edit = FALSE;
+
+	if (module_exists('shib_auth')) {
+		$eppn = explode('@', $_SERVER['eppn']);
+		$allow_user_edit = ($eppn[0] == $person->net_id);
+	}
+
 	$page = array();
 
 	$page['person'] = array(
 		'#theme' => 'staff_person',
 		'#person' => $person,
 		'#settings' => $tpl_settings,
+		'#allow_user_edit' => $allow_user_edit,
+		'#uid' => $user->uid,
 	);
 
 	return $page;
@@ -125,8 +135,9 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 		'#type' => 'markup',
 		'#markup' => $dept_head_html,
 	);
+	dpm($dept);
 	$build['dept_address'] = array(
-		'#theme' => 'staff_dept_address',
+		'#theme' => 'staff_dept_head',
 		'#dept' => $dept,
 	);
 	

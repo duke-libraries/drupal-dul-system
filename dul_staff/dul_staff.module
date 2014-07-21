@@ -3,8 +3,8 @@
 //include_once 'dul_staff.forms.inc';
 
 // Campus box regex patters
-define('CAMPUSBOX_REGEX', '/^(?P<campus_box>.+)\$(?P<city>\w+),\s?(?P<state>\w{2})\s?(?P<zip5>[\d]{5})(?P<zip4>[\d]{4})?$/');
-define('PHYSICAL_ADDR_REGEX', '/^(?P<office>.+)\$(?P<city>\w+),\s?(?P<state>\w{2})\s?(?P<zip5>[\d]{5})(?P<zip4>[\d]{4})?$/');
+define('CAMPUSBOX_REGEX', '/^(?P<campus_box>[\w\s]+)\$((?P<building>[\w\s]+)\$)?(?P<city>\w+),\s?(?P<state>\w{2})\s?(?P<zip5>[\d]{5})(?P<zip4>[\d]{4})?$/');
+define('PHYSICAL_ADDR_REGEX', '/^((?P<po_box>[\w\s.]+)\$)?(?P<office>.+)\$(?P<city>\w+),\s?(?P<state>\w{2})\s?(?P<zip5>[\d]{5})(?P<zip4>[\d]{4})?$/');
 
 /**
  * Implements hook_menu()
@@ -41,14 +41,16 @@ function dul_staff_menu() {
 		),
 		'about/directory' => array(
 			'page callback' => 'dul_staff_directory',
-			'title' => 'Staff Directory',
+			'title' => 'Duke University Libraries Staff Directory',
 			'file' => 'dul_staff.pages.inc',
 			'access callback' => TRUE,
 		),
+		# This entry exists to surpress the 'Staff' breadcrumb
+		# (by setting 'access callback' => FALSE)
 		'about/directory/staff' => array(
 			'title' => 'Staff',
 			'page callback' => 'dul_staff_staff_overview',
-			'access callback' => TRUE,
+			'access callback' => FALSE,
 			'file' => 'dul_staff.pages.inc',
 		),
 		'about/directory/staff/%dul_staff_person' => array(
@@ -61,7 +63,7 @@ function dul_staff_menu() {
 		),
 		'about/directory/dept' => array(
 			'page callback' => 'dul_staff_dept_overview',
-			'access callback' => TRUE,
+			'access callback' => FALSE,
 			'file' => 'dul_staff.pages.inc',
 			'title' => 'Departments',
 		),
@@ -96,8 +98,12 @@ function dul_staff_theme($existing, $type, $theme, $path) {
 			'file' => 'dul_staff.theme.inc',
 			'variables' => array('dept' => NULL),
 		),	
+		'staff_dept_head' => array(
+			'template' => 'staff_dept_head',
+			'variables' => array('dept' => NULL),
+		),
 		'staff_person' => array(
-			'variables' => array('person' => NULL, 'settings' => array()),
+			'variables' => array('person' => NULL, 'settings' => array(), 'allow_user_edit' => FALSE, 'uid' => NULL,),
 			'template' => 'staff_person',
 		),		
 		'core-services' => array(
@@ -106,6 +112,24 @@ function dul_staff_theme($existing, $type, $theme, $path) {
 	);
 }
 
+/*
+function dul_staff_entity_info() {
+	return array(
+		'directory_person' => array(
+			'label' => 'Directory Person',
+			'controller class' => '',
+			'base table' => 'directory_person',
+			'static cache' => FALSE,
+			'load hook' => 'directory_person_load',
+			'uri callback' => 'directory_person_uri_callback',
+			'entity keys' => array(
+				'id' => 'id',
+				'label' => 'display_name',
+			),
+		)
+	);
+}
+*/
 
 /**
  * Implements hook_form_alter for user profile form
@@ -136,6 +160,12 @@ function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
 			'#collapsed' => TRUE,
 			'#weight' => 2,
 		);
+		$form['staff_data']['staff_keywords'] = array(
+			'#type' => 'textfield',
+			'#default_value' => $person->keywords,
+			'#title' => t('Keywords'),
+			'#description' => t('Comma-separated.  These keywords are used by the Bento Search facilty'),
+		);
 		$form['staff_data']['profile'] = array(
 			'#type' => 'text_format',
 			'#default_value' => $person->profile,
@@ -144,6 +174,7 @@ function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
 		);
 		$form_state['staff_data']['profile_old'] = $person->profile;
 		$form_state['staff_data']['person_id'] = $person->id;
+		$form_state['staff_data']['keywords_old'] = $person->keywords;
 		
 		$form['#submit'][] = 'dul_staff_staff_directory_submit';
 	}
@@ -152,16 +183,28 @@ function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
 /**
  * Callback function for dul_staff_form_user_profile_form_alter
  */
-function dul_staff_directory_submit($form, &$form_state) {
-	drupal_set_message("submitted staff data -- I hope");
+function dul_staff_staff_directory_submit($form, &$form_state) {
+	$merge_fields = array();
 	if ($form_state['values']['profile']['value'] != $form_state['staff_data']['profile_old']) {
+		$merge_fields['profile'] = $form_state['values']['profile']['value'];
+	}
+	if ($form_state['values']['staff_keywords'] != $form_state['staff_data']['keywords_old']) {
+		$merge_fields['keywords'] = $form_state['values']['staff_keywords'];
+	}
+
+	if (count($merge_fields)) {
 		db_set_active('django');
-		$num_updated = db_update('directory_person')
-			->fields(array(
-				'profile' => $form_state['values']['profile']['value'],
-			))
-			->condition('id', $form_state['staff_data']['person_id'])
+		$num_updated = db_merge('directory_person')
+			->key(array('id' => $form_state['staff_data']['person_id']))
+			->fields($merge_fields)
 			->execute();
+			
+		#$num_updated = db_update('directory_person')
+		#	->fields(array(
+		#		'profile' => $form_state['values']['profile']['value'],
+		#	))
+		#	->condition('id', $form_state['staff_data']['person_id'])
+		#	->execute();
 		db_set_active();
 		
 		if ($num_updated) {
@@ -213,6 +256,7 @@ function dul_staff_person_load($person_id) {
 	db_set_active();
 	
 	$phys_address = explode('$', $person->physical_address);
+	
 	try {
 		$person->address = $phys_address[0];
 	} catch(Exception $phys_exc) {
@@ -228,6 +272,9 @@ function dul_staff_person_load($person_id) {
 		$person->postal_address['zipcode'] = $matches['zip5'];
 		$person->postal_address['city'] = $matches['city'];
 		$person->postal_address['state'] = $matches['state'];
+		if (!empty($matches['building'])) {
+			$person->postal_address['building'] = $matches['building'];
+		}
 		if (isset($matches['zip4'])) {
 			$person->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
 		}
@@ -249,6 +296,9 @@ function dul_staff_person_load($person_id) {
 			}
 		}
 	}
+
+	// replace " " spaces with "-" in the (main) phone number
+	$person->phone = str_replace(' ', '-', $person->phone);
 	return $person;
 }
 
@@ -268,10 +318,52 @@ function dul_staff_dept_load($dept_id) {
 	$q->addField('s', 'photo_url');
 	$q->addField('s', 'phone', 'head_phone');
 	$q->addField('s', 'email', 'dept_head_email');
+	$q->addField('s', 'physical_address');
+	$q->addField('s', 'campus_box');
+	$q->addField('s', 'email_privacy');
 	$q->condition('d.id', $dept_id);
 	$res = $q->execute();
 	
 	$dept = $res->fetchObject();
+	// TODO put in one central location (or adapt Entity framework)
+	$phys_address = explode('$', $dept->physical_address);
+	try {
+		$dept->address = $phys_address[0];
+	} catch(Exception $phys_exc) {
+		// pass
+	}
+
+	$matches = array();
+	preg_match(CAMPUSBOX_REGEX, $dept->campus_box, $matches);	// @see the top of this file
+	if (count($matches)) {
+		$dept->postal_address = array();
+		
+		$dept->postal_address['box'] = $matches['campus_box'];
+		$dept->postal_address['zipcode'] = $matches['zip5'];
+		$dept->postal_address['city'] = $matches['city'];
+		$dept->postal_address['state'] = $matches['state'];
+		if (isset($matches['zip4'])) {
+			$dept->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
+		}
+	}
+
+	preg_match(PHYSICAL_ADDR_REGEX, $dept->physical_address, $matches);	// @see the top of this file
+	if (count($matches)) {
+		if (!isset($dept->postal_address)) {
+			$dept->postal_address = array();
+		}
+		$dept->postal_address['office'] = $matches['office'];
+		$dept->postal_address['state'] = $matches['state'];
+		$dept->postal_address['city'] = $matches['city'];
+		
+		if (!isset($postal_address['zipcode'])) {
+			$dept->postal_address['zipcode'] = $matches['zip5'];
+			if (isset($matches['zip4'])) {
+				$dept->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
+			}
+		}
+	}
+
 	$dept->members = array();
 	$dept->allmembers = array();
 
@@ -302,6 +394,46 @@ function dul_staff_dept_load($dept_id) {
 		$rs = $r->execute();
 		foreach ($rs as $mem) {
 			if (!in_array($mem->id, $processed_staff)) {
+
+				// TODO put in one central location (or adapt Entity framework)
+				$phys_address = explode('$', $mem->physical_address);
+				try {
+					$mem->address = $phys_address[0];
+				} catch(Exception $phys_exc) {
+					// pass
+				}
+			
+				$matches = array();
+				preg_match(CAMPUSBOX_REGEX, $mem->campus_box, $matches);	// @see the top of this file
+				if (count($matches)) {
+					$mem->postal_address = array();
+					
+					$mem->postal_address['box'] = $matches['campus_box'];
+					$mem->postal_address['zipcode'] = $matches['zip5'];
+					$mem->postal_address['city'] = $matches['city'];
+					$mem->postal_address['state'] = $matches['state'];
+					if (isset($matches['zip4'])) {
+						$mem->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
+					}
+				}
+			
+				preg_match(PHYSICAL_ADDR_REGEX, $mem->physical_address, $matches);	// @see the top of this file
+				if (count($matches)) {
+					if (!isset($mem->postal_address)) {
+						$mem->postal_address = array();
+					}
+					$mem->postal_address['office'] = $matches['office'];
+					$mem->postal_address['state'] = $matches['state'];
+					$mem->postal_address['city'] = $matches['city'];
+					
+					if (!isset($postal_address['zipcode'])) {
+						$mem->postal_address['zipcode'] = $matches['zip5'];
+						if (isset($matches['zip4'])) {
+							$mem->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
+						}
+					}
+				}
+
 				$dept->members[] = $mem;
 				$processed_staff[] = $mem->id;
 			}
