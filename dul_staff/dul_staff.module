@@ -1,0 +1,583 @@
+<?php
+
+//include_once 'dul_staff.forms.inc';
+
+// Campus box regex patters
+define('CAMPUSBOX_REGEX', '/^(?P<campus_box>[\w\s]+)\$((?P<building>[\w\s]+)\$)?(?P<city>\w+),\s?(?P<state>\w{2})\s?(?P<zip5>[\d]{5})(?P<zip4>[\d]{4})?$/');
+define('PHYSICAL_ADDR_REGEX', '/^((?P<po_box>[\w\s.]+)\$)?(?P<office>.+)\$(?P<city>\w+),\s?(?P<state>\w{2})\s?(?P<zip5>[\d]{5})(?P<zip4>[\d]{4})?$/');
+
+/**
+ * Implements hook_menu()
+ * add "Staff Directory"-related routing
+ */
+function dul_staff_menu() {
+	return array(
+		'admin/config/staff' => array(
+			'title' => 'Library Staff Directory',
+			'description' => 'Departments and Staff Management',
+			'position' => 'right',
+			'weight' => -5,
+			'page callback' => 'system_admin_menu_block_page',
+			'access arguments' => array('administer site configuration'),
+			'file' => 'system.admin.inc',
+			'file path' => drupal_get_path('module', 'system'),
+		),
+		'admin/config/staff/dept' => array(
+			'title' => 'Departments',
+			'description' => 'Set the address used in the footer of the website.',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('dul_staff_admin_staff_dept'),
+			'access arguments' => array('administer site configuration'),
+			'type' => MENU_NORMAL_ITEM,
+			'file' => 'dul_staff.admin.inc',
+		),
+		'admin/config/staff/dept/edit/%dul_staff_dept' => array(
+			'title callback' => 'dul_staff_dept_title',
+			'title arguments' => array(5),
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('dul_staff_admin_dept_form', 5, dul_staff_model_data('dept_edit')),
+			'access arguments' => array('administer site configuration'),
+			'file' => 'dul_staff.admin.inc',
+		),
+		'about/directory' => array(
+			'page callback' => 'dul_staff_directory',
+			'title' => 'Duke University Libraries Staff Directory',
+			'file' => 'dul_staff.pages.inc',
+			'access callback' => TRUE,
+		),
+		# This entry exists to surpress the 'Staff' breadcrumb
+		# (by setting 'access callback' => FALSE)
+		'about/directory/staff' => array(
+			'title' => 'Staff',
+			'page callback' => 'dul_staff_staff_overview',
+			'access callback' => FALSE,
+			'file' => 'dul_staff.pages.inc',
+		),
+		'about/directory/staff/%dul_staff_person' => array(
+			'page callback' => 'dul_staff_person',
+			'title callback' => 'dul_staff_person',
+			'title arguments' => array(3, 'title'),
+			'page arguments' => array(3),
+			'access callback' => TRUE,
+			'file' => 'dul_staff.pages.inc',
+		),
+		'about/directory/dept' => array(
+			'page callback' => 'dul_staff_dept_overview',
+			'access callback' => FALSE,
+			'file' => 'dul_staff.pages.inc',
+			'title' => 'Departments',
+		),
+		'about/directory/dept/%dul_staff_dept' => array(
+			'page callback' => 'dul_staff_dept',
+			'page arguments' => array(3),
+			'file' => 'dul_staff.pages.inc',
+			'access callback' => TRUE,
+			'title callback' => 'dul_staff_dept',
+			'title arguments' => array(3, 'title'),
+		),
+		//'about/dept/%dul_staff_dept' => array(
+		//	'page callback' => 'dul_staff_page',
+		//	'page arguments' => array(2),
+		//	'file' => 'dul_staff.pages.inc',
+		//	'access callback' => TRUE,
+		//),
+	);
+}
+
+/**
+ * Implements hook_theme()
+ * Defines custom themes here.
+ */
+function dul_staff_theme($existing, $type, $theme, $path) {
+	return array(
+		'staff_directory' => array(
+			'file' => 'dul_staff.theme.inc',
+			'variables' => array('top_dept' => NULL, 'reporting_depts' => NULL),
+		),
+		'staff_dept_address' => array(
+			'file' => 'dul_staff.theme.inc',
+			'variables' => array('dept' => NULL),
+		),	
+		'staff_dept_head' => array(
+			'template' => 'staff_dept_head',
+			'variables' => array('dept' => NULL),
+		),
+		'staff_person' => array(
+			'variables' => array('person' => NULL, 'settings' => array(), 'allow_user_edit' => FALSE, 'uid' => NULL,),
+			'template' => 'staff_person',
+		),		
+		'core-services' => array(
+			'template' => 'dul_system-core-services',
+		),
+	);
+}
+
+/*
+function dul_staff_entity_info() {
+	return array(
+		'directory_person' => array(
+			'label' => 'Directory Person',
+			'controller class' => '',
+			'base table' => 'directory_person',
+			'static cache' => FALSE,
+			'load hook' => 'directory_person_load',
+			'uri callback' => 'directory_person_uri_callback',
+			'entity keys' => array(
+				'id' => 'id',
+				'label' => 'display_name',
+			),
+		)
+	);
+}
+*/
+
+/**
+ * Implements hook_form_alter for user profile form
+ */
+function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
+	//dpm($form);
+	// get the email address of the user in question so we can grab the netid
+	$mail = $form_state['user']->mail;
+	$pieces = explode("@", $mail);
+	$potential_netid = $pieces[0];
+		
+	// retrieve staff person 'profile' data and display as a field
+	db_set_active('django');
+	$result = db_query(
+		'SELECT p.* FROM {directory_person} p '
+		. 'WHERE net_id = :netid',
+		array(':netid' => $potential_netid));
+		
+	$person = $result->fetchObject();	
+	db_set_active();
+	
+	if (!is_null($person)) {
+		$form['staff_data'] = array(
+			'#type' => 'fieldset',
+			'#title' => t('Staff Directory Data'),
+			'#description' => t('This is the same data provided by the former Staff Directory (Django)'),
+			'#collapsible' => TRUE,
+			'#collapsed' => TRUE,
+			'#weight' => 2,
+		);
+		$form['staff_data']['staff_keywords'] = array(
+			'#type' => 'textfield',
+			'#default_value' => $person->keywords,
+			'#title' => t('Keywords'),
+			'#description' => t('Comma-separated.  These keywords are used by the Bento Search facilty'),
+		);
+		$form['staff_data']['profile'] = array(
+			'#type' => 'text_format',
+			'#default_value' => $person->profile,
+			'#title' => t('Profile'),
+			'#rows' => 15,
+		);
+		$form_state['staff_data']['profile_old'] = $person->profile;
+		$form_state['staff_data']['person_id'] = $person->id;
+		$form_state['staff_data']['keywords_old'] = $person->keywords;
+		
+		$form['#submit'][] = 'dul_staff_staff_directory_submit';
+	}
+}
+
+/**
+ * Callback function for dul_staff_form_user_profile_form_alter
+ */
+function dul_staff_staff_directory_submit($form, &$form_state) {
+	$merge_fields = array();
+	if ($form_state['values']['profile']['value'] != $form_state['staff_data']['profile_old']) {
+		$merge_fields['profile'] = $form_state['values']['profile']['value'];
+	}
+	if ($form_state['values']['staff_keywords'] != $form_state['staff_data']['keywords_old']) {
+		$merge_fields['keywords'] = $form_state['values']['staff_keywords'];
+	}
+
+	if (count($merge_fields)) {
+		db_set_active('django');
+		$num_updated = db_merge('directory_person')
+			->key(array('id' => $form_state['staff_data']['person_id']))
+			->fields($merge_fields)
+			->execute();
+			
+		#$num_updated = db_update('directory_person')
+		#	->fields(array(
+		#		'profile' => $form_state['values']['profile']['value'],
+		#	))
+		#	->condition('id', $form_state['staff_data']['person_id'])
+		#	->execute();
+		db_set_active();
+		
+		if ($num_updated) {
+			drupal_set_message(t('Your profile information has been saved'));
+		}
+	}
+}
+
+
+/**
+ * Loader function for %person parameter/argument
+ * 
+ * Using 'db_query' instead of 'db_select' because the tables in 
+ * the 'locationguide' (django) databases aren't defined
+ * in hook_schema (see dul_system.install)
+ */
+function dul_staff_person_load($person_id) {
+	db_set_active('django');
+	$result = db_query("SELECT * FROM {directory_person} p WHERE id = :person_id OR net_id = :netid", 
+		array(':person_id' => $person_id, ':netid' => $person_id));
+		
+	$person = $result->fetchObject();
+	
+	if (!is_null($person)) {
+		// load department names
+		$person->depts = array();
+		$person->subject_guides = array();
+		$result = db_query(
+			"SELECT o.* FROM {directory_orgunit} o "
+			. "LEFT JOIN {directory_orgunit_members} m ON m.orgunit_id = o.id "
+			. "WHERE m.person_id = :person_id",
+			array(':person_id' => $person->id));
+			
+		foreach ($result as $dept) {
+			$person->depts[] = $dept;
+		}
+		
+		// Load any related subject guides assigned to this person
+		$result = db_query(
+			"SELECT sg.* FROM {directory_subjectguide} sg "
+			. "WHERE person_id = :person_id "
+			. "ORDER BY sg.order",
+			array(':person_id' => $person->id));
+			
+		foreach ($result as $subjectguide) {
+			$person->subject_guides[] = $subjectguide;
+		}
+	}
+	db_set_active();
+	
+	$phys_address = explode('$', $person->physical_address);
+	
+	try {
+		$person->address = $phys_address[0];
+	} catch(Exception $phys_exc) {
+		// pass
+	}
+
+	$matches = array();
+	preg_match(CAMPUSBOX_REGEX, $person->campus_box, $matches);	// @see the top of this file
+	if (count($matches)) {
+		$person->postal_address = array();
+		
+		$person->postal_address['box'] = $matches['campus_box'];
+		$person->postal_address['zipcode'] = $matches['zip5'];
+		$person->postal_address['city'] = $matches['city'];
+		$person->postal_address['state'] = $matches['state'];
+		if (!empty($matches['building'])) {
+			$person->postal_address['building'] = $matches['building'];
+		}
+		if (isset($matches['zip4'])) {
+			$person->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
+		}
+	}
+
+	preg_match(PHYSICAL_ADDR_REGEX, $person->physical_address, $matches);	// @see the top of this file
+	if (count($matches)) {
+		if (!isset($person->postal_address)) {
+			$person->postal_address = array();
+		}
+		$person->postal_address['office'] = $matches['office'];
+		$person->postal_address['state'] = $matches['state'];
+		$person->postal_address['city'] = $matches['city'];
+		
+		if (!isset($postal_address['zipcode'])) {
+			$person->postal_address['zipcode'] = $matches['zip5'];
+			if (isset($matches['zip4'])) {
+				$person->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
+			}
+		}
+	}
+
+	// replace " " spaces with "-" in the (main) phone number
+	$person->phone = str_replace(' ', '-', $person->phone);
+	return $person;
+}
+
+/**
+ * Title callback function for person
+ */
+function dul_staff_dept_load($dept_id) {
+	db_set_active('django');
+	$q = db_select('directory_orgunit', 'd');
+	$q->fields('d');
+	$q->addField('d', 'email', 'dept_email');
+	$q->leftJoin('directory_person', 's', 'd.head_id = s.id');
+	$q->addField('s', 'id', 'head_person_id');
+	$q->addField('s', 'display_name', 'head_display_name');
+	$q->addField('s', 'title', 'head_title');
+	$q->addField('s', 'preferred_title', 'head_preferred_title');
+	$q->addField('s', 'photo_url');
+	$q->addField('s', 'phone', 'head_phone');
+	$q->addField('s', 'email', 'dept_head_email');
+	$q->addField('s', 'physical_address');
+	$q->addField('s', 'campus_box');
+	$q->addField('s', 'email_privacy');
+	$q->condition('d.id', $dept_id);
+	$res = $q->execute();
+	
+	$dept = $res->fetchObject();
+	// TODO put in one central location (or adapt Entity framework)
+	$phys_address = explode('$', $dept->physical_address);
+	try {
+		$dept->address = $phys_address[0];
+	} catch(Exception $phys_exc) {
+		// pass
+	}
+
+	$matches = array();
+	preg_match(CAMPUSBOX_REGEX, $dept->campus_box, $matches);	// @see the top of this file
+	if (count($matches)) {
+		$dept->postal_address = array();
+		
+		$dept->postal_address['box'] = $matches['campus_box'];
+		$dept->postal_address['zipcode'] = $matches['zip5'];
+		$dept->postal_address['city'] = $matches['city'];
+		$dept->postal_address['state'] = $matches['state'];
+		if (isset($matches['zip4'])) {
+			$dept->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
+		}
+	}
+
+	preg_match(PHYSICAL_ADDR_REGEX, $dept->physical_address, $matches);	// @see the top of this file
+	if (count($matches)) {
+		if (!isset($dept->postal_address)) {
+			$dept->postal_address = array();
+		}
+		$dept->postal_address['office'] = $matches['office'];
+		$dept->postal_address['state'] = $matches['state'];
+		$dept->postal_address['city'] = $matches['city'];
+		
+		if (!isset($postal_address['zipcode'])) {
+			$dept->postal_address['zipcode'] = $matches['zip5'];
+			if (isset($matches['zip4'])) {
+				$dept->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
+			}
+		}
+	}
+
+	$dept->members = array();
+	$dept->allmembers = array();
+
+
+	// for departments directly under the Perkins Library System department (parent_id = 1)
+	// fetch every staff member for each child department
+	if ($dept->parent_id == '1') {
+		// create this temporary array to keep track of 
+		// members as they are processed -- this is done 
+		// to eliminate duplicates
+		$processed_staff = array();
+
+		$r = db_select('directory_orgunit', 'd')
+			->fields('d')
+			->condition('parent_id', $dept->id)
+			->execute();
+			
+		$sq = db_select('directory_orgunit', 'ou')
+			->fields('ou', array('id'))
+			->condition('ou.parent_id', $dept->id);
+			
+		$r = db_select('directory_person', 's');
+		$r->join('directory_orgunit_members', 'om', 'om.person_id = s.id');
+		$r->fields('s');
+		$r->orderBy('s.last_name');
+		$r->orderBy('s.first_name');
+		$r->condition('om.orgunit_id', $sq, 'IN');
+		$rs = $r->execute();
+		foreach ($rs as $mem) {
+			if (!in_array($mem->id, $processed_staff)) {
+
+				// TODO put in one central location (or adapt Entity framework)
+				$phys_address = explode('$', $mem->physical_address);
+				try {
+					$mem->address = $phys_address[0];
+				} catch(Exception $phys_exc) {
+					// pass
+				}
+			
+				$matches = array();
+				preg_match(CAMPUSBOX_REGEX, $mem->campus_box, $matches);	// @see the top of this file
+				if (count($matches)) {
+					$mem->postal_address = array();
+					
+					$mem->postal_address['box'] = $matches['campus_box'];
+					$mem->postal_address['zipcode'] = $matches['zip5'];
+					$mem->postal_address['city'] = $matches['city'];
+					$mem->postal_address['state'] = $matches['state'];
+					if (isset($matches['zip4'])) {
+						$mem->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
+					}
+				}
+			
+				preg_match(PHYSICAL_ADDR_REGEX, $mem->physical_address, $matches);	// @see the top of this file
+				if (count($matches)) {
+					if (!isset($mem->postal_address)) {
+						$mem->postal_address = array();
+					}
+					$mem->postal_address['office'] = $matches['office'];
+					$mem->postal_address['state'] = $matches['state'];
+					$mem->postal_address['city'] = $matches['city'];
+					
+					if (!isset($postal_address['zipcode'])) {
+						$mem->postal_address['zipcode'] = $matches['zip5'];
+						if (isset($matches['zip4'])) {
+							$mem->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
+						}
+					}
+				}
+
+				$dept->members[] = $mem;
+				$processed_staff[] = $mem->id;
+			}
+		}
+		
+	} else {
+		// this is a child department whose parent is NOT 'Perkins Library System'
+		// so just fetch the members of this department.
+		$q = db_select('directory_person', 's');
+		$q->join('directory_orgunit_members', 'm', 'm.person_id = s.id');
+		$q->fields('s')
+			->condition('m.orgunit_id', $dept_id)
+			->orderBy('s.last_name')
+			->orderBy('s.first_name');
+
+		$res = $q->execute();
+		foreach ($res as $member) {
+			$dept->members[] = $member;
+		}
+		
+	}
+	db_set_active();
+
+	return $dept;
+}
+
+/**
+ * Staff Directory Tree data
+ */
+function dul_staff_directory_tree() {
+	$directory_tree = &drupal_static(__FUNCTION__);
+	if (!isset($directory_tree)) {
+		if ($cache = cache_get('staff_directory_tree')) {
+			$directory_tree = $cache->data;
+		} else {
+			// do the heavy lifting database work here.
+			db_set_active('django');
+			
+			$q = db_select('directory_orgunit', 'o');
+			$q->leftJoin('directory_person', 'p', 'p.id = o.head_id');
+			$q->fields('o');	// orgunit fields
+			$q->addField('p', 'display_name', 'head_display_name');
+			$q->addfield('p', 'title', 'head_jobtitle');
+			$q->addField('p', 'preferred_title', 'head_preferred_title');
+			$q->isNull('parent_id');
+			$res = $q->execute();
+			$top_dept = $res->fetchObject();
+			
+			// Generate list of departments reporting directly to
+			// "Perkins Library System"
+			$q = db_select('directory_orgunit', 'o');
+			#$q->join('directory_orgunit_members', 'om', 'o.head_id = om.orgunit_id');
+			$q->leftJoin('directory_person', 'p', 'p.id = o.head_id');
+			$q->fields('o');
+			$q->addField('p', 'display_name', 'head_display_name');
+			$q->addField('p', 'display_name', 'head_displaytitle');
+			$q->addfield('p', 'title', 'head_jobtitle');
+			$q->addField('p', 'preferred_title', 'head_preferred_title');
+			$q->addField('p', 'id', 'head_person_id');
+			$q->condition('parent_id', $top_dept->id);
+			$q->orderBy('o.name');
+			$res = $q->execute();
+			
+			$reporting_depts = array();
+			foreach ($res as $dept) {
+				$q = db_select('directory_orgunit', 'o');
+				#$q->join('directory_orgunit_members', 'om', 'o.head_id = om.orgunit_id');
+				$q->leftJoin('directory_person', 'p', 'p.id = o.head_id');
+				$q->fields('o');
+				$q->addField('p', 'display_name', 'head_display_name');
+				$q->addField('p', 'display_name', 'head_displaytitle');
+				$q->addfield('p', 'title', 'head_jobtitle');
+				$q->addField('p', 'preferred_title', 'head_preferred_title');
+				$q->addField('p', 'id', 'head_person_id');
+				$q->condition('parent_id', $dept->id);
+				$q->orderBy('o.name');
+				$sub_res = $q->execute();
+				$dept->child_depts = array();
+				
+				foreach ($sub_res as $o) {
+					$dept->child_depts[] = $o;
+				}
+				
+				$reporting_depts[] = $dept;
+			}
+			
+			$directory_tree['top_dept'] = $top_dept;
+			$directory_tree['reporting_depts'] = $reporting_depts;
+			db_set_active();
+			cache_set('staff_directory_tree', $directory_tree, 'cache');
+		}
+	}
+	return $directory_tree;
+}
+
+/**
+ * Model data for various callbacks
+ */
+function dul_staff_model_data($context) {
+	$model = array();
+	switch ($context) {
+		case 'dept_edit':
+			$model['options']['dept'] = dul_staff_load_dept_options();
+			$model['options']['person'] = dul_staff_load_person_options();
+			break;
+	}
+	
+	return $model;
+}
+
+function dul_staff_load_dept_options() {
+	db_set_active('django');
+	$result = db_select('directory_orgunit', 'o')
+		->fields('o', array('id', 'name'))
+		->orderBy('name')
+		->execute();
+		
+	$options = array();
+	foreach ($result as $o) {
+		$options[$o->id] = $o->name;
+	}
+	db_set_active();
+	return $options;
+}
+
+function dul_staff_load_person_options() {
+	db_set_active('django');
+	$result = db_select('directory_person', 'p')
+		->fields('p', array('id', 'display_name'))
+		->orderBy('last_name', 'ASC')
+		->orderBy('first_name', 'ASC')
+		->execute();
+		
+	$options = array();
+	foreach ($result as $o) {
+		$options[$o->id] = $o->display_name;
+	}
+	db_set_active();
+	return $options;
+}
+
+/**
+ * Title callback
+ */
+function dul_staff_dept_title($dept) {
+	return $dept->name;
+}

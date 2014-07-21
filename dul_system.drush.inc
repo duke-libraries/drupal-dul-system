@@ -135,6 +135,7 @@ function drush_dul_system_dul_refresh_staff() {
 			'email_privacy' => (string) $person->email_privacy,
 			'photo' => (string) $person->photo,
 			'url' => (string) $person->url,
+			'profile' => (string) $person->profile,
 		))
 		->execute();
 

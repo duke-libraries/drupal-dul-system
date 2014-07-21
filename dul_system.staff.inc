@@ -23,6 +23,7 @@ function dul_system_staff_directory() {
 	$q->fields('d');
 	$q->addField('s', 'displayname', 'head_displaytitle');
 	$q->addField('s', 'jobtitle', 'head_jobtitle');
+	$q->addField('s', 'person_id', 'head_person_id');
 	$q->condition('parent_did', $top_dept->dept_id);
 	$res = $q->execute();
 	
@@ -33,6 +34,7 @@ function dul_system_staff_directory() {
 		$q->fields('d');
 		$q->addField('s', 'displayname', 'head_displaytitle');
 		$q->addField('s', 'jobtitle', 'head_jobtitle');
+		$q->addField('s', 'person_id', 'head_person_id');
 		$q->condition('parent_did', $dept->dept_id);
 		$q->orderBy('d.title');
 		$sub_res = $q->execute();
@@ -50,6 +52,43 @@ function dul_system_staff_directory() {
 		'#top_dept' => $top_dept,
 		'#reporting_depts' => $reporting_depts, 
 	);
+}
+
+/**
+ * Page callback that displays a Staff Person or returns the 
+ * DisplayName of the Staff Person as a 'title' in response to 
+ * a 'title callback'
+ * 
+ * @param stdClass $person A person object loaded from database
+ * @param String $selector NULL or 'title'
+ * @returns mixed (render array or string output)
+ * 
+ * @see dul_system_person_load()
+ */
+function dul_system_staff_person(stdClass $person, $selector=NULL) {
+	if ($selector == 'title') {
+		return $person->display_name;
+	}
+	
+	# at this point, there are at least 2 options
+	# 1) build a render array and return it
+	# 2) pass the $staff object to a theme function
+	# 3) a hybrid of 1 and 2
+	
+	$tpl_settings = array('address_info_offset' => '', 'has_profile' => !empty($person->profile));
+	if (!is_null($person->photo_url)) {
+		$tpl_settings['address_info_offset'] = 'offset1';
+	}
+	
+	$page = array();
+	dpm($person);
+	$page['person'] = array(
+		'#theme' => 'staff_person',
+		'#person' => $person,
+		'#settings' => $tpl_settings,
+	);
+
+	return $page;
 }
 
 function dul_system_staff_netid($netid) {
@@ -81,21 +120,12 @@ function dul_system_staff_netid($netid) {
 		'#markup' => '<div>' . $staff->displayname . '</div>',
 	);
 	
-	$page['staff_person'] = array(
+	$page['person'] = array(
 		'#theme' => 'staff_person',
-		'#staff_person' => $staff,
+		'#person' => $staff,
 	);
 	
 	return $page;
-}
-
-/**
- * Theme function for the 'staff_person' theme
- */
-function theme_staff_person($variables) {
-	extract($variables);
-	return '<h3>' . $staff_person->displayname . '</h3><small>' . $staff_person->jobtitle . '</small>';
-	
 }
 
 function dul_system_staff_page2($dept) {
@@ -183,18 +213,18 @@ function theme_staff_directory($variables) {
 	foreach ($reporting_depts as $dept) {
 		$row = array(
 			'data' => array(
-				array('data' => l(t(strtoupper($dept->title)), 'about/staff/dept/' . $dept->dept_id), 'colspan' => 3, 'header' => TRUE,),
-				array('data' => t($dept->head_displaytitle), 'header' => TRUE,),
+				array('data' => l(t(strtoupper($dept->title)), 'about/dept/' . $dept->dept_id), 'colspan' => 3, 'header' => TRUE,),
+				array('data' => l(t($dept->head_displaytitle), 'about/directory/staff/' . $dept->head_person_id), 'header' => TRUE,),
 			),
 		);
 		$rows[] = $row;
 		foreach ($dept->child_depts as $o) {
 			$rows[] = array(
 				'data' => array(
-					l(t($o->title), 'about/staff/dept/' . $o->dept_id),
+					l(t($o->title), 'about/dept/' . $o->dept_id),
 					t($o->phone),
 					t($o->address),
-					t($o->head_displaytitle),
+					l(t($o->head_displaytitle), 'about/directory/staff/' . $o->head_person_id),
 				)
 			);
 		}

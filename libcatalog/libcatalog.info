@@ -1,0 +1,14 @@
+name = Library Catalog
+description = Library Catalog Interface (including XServer support)
+core = 7.x
+dependencies[] = dul_system
+files[] = libcatalog.module
+; these files contain class definitions
+; and are listing so Drupal can scan these class 
+; definitions, making them available for 
+; .module files, etc
+files[] = libcatalog.xserver.inc
+files[] = libcatalog.xserver.result.inc
+files[] = libcatalog.xserver.item.inc
+files[] = libcatalog.model.locmap.inc
+files[] = libcatalog.model.helpers.inc

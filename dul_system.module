@@ -35,18 +35,6 @@ function dul_system_menu() {
 			'type' => MENU_NORMAL_ITEM,
 			'file' => 'dul_system.admin.inc',
 		),
-		'about/staff' => array(
-			'page callback' => 'dul_system_staff_directory',
-			'title' => 'Duke University Libraries Staff Directory',
-			'file' => 'dul_system.staff.inc',
-			'access callback' => TRUE,
-		),
-		'about/staff/dept/%dul_system_dept' => array(
-			'page callback' => 'dul_system_staff_page',
-			'page arguments' => array(3),
-			'file' => 'dul_system.staff.inc',
-			'access callback' => TRUE,
-		),
 		'error/404' => array(
 			'page callback' => 'dul_system_404',
 			'access callback' => TRUE,
@@ -59,7 +47,7 @@ function dul_system_menu() {
 			'page callback' => 'dul_system_403',
 			'access callback' => TRUE,
 		),
-		'whoops_unauthorized' => array(
+		'unauthorized' => array(
 			'page callback' => 'dul_system_403',
 			'access callback' => TRUE,
 		),
@@ -71,10 +59,8 @@ function dul_system_menu() {
 			'page callback' => 'dul_system_500',
 			'access callback' => TRUE,
 		),
-		'about/staff/netid/%' => array(
-			'page callback' => 'dul_system_staff_netid',
-			'page arguments' => array(3),
-			'file' => 'dul_system.staff.inc',
+		'whoops_gone' => array(
+			'page callback' => 'dul_system_410',
 			'access callback' => TRUE,
 		),
 		'ext/header' => array(
@@ -124,31 +110,6 @@ function dul_system_theme($existing, $type, $theme, $path) {
 		'welcome-anonymous' => array(
 			'template' => 'welcome-anonymous'
 		),
-		'staff_directory' => array(
-			'file' => 'dul_system.staff.inc',
-			'variables' => array('top_dept' => NULL, 'reporting_depts' => NULL),
-		),
-		'staff_dept_address' => array(
-			'file' => 'dul_system.staff.inc',
-			'variables' => array('dept' => NULL),
-		),
-		'staff_person' => array(
-			'variables' => array('staff_person' => NULL),
-			
-			// FILE-based
-			// the default theme function lives here...
-			// Drupal will look for <hook>_staff_person
-			'file' => 'dul_system.staff.inc',
-
-			// TEMPLATE
-			// Drupal will look for the file 'staff_person.tpl.php'
-			// 'template' => 'staff_person',
-			// 'path' => $path . '/templates' <--- do this if you want to have a 'templates' folder in your module
-		),
-		
-		'core-services' => array(
-			'template' => 'dul_system-core-services',
-		),
 
 		'oh-snap' => array(
 			'template' => 'oh-snap',
@@ -157,12 +118,47 @@ function dul_system_theme($existing, $type, $theme, $path) {
 		'server_error' => array(
 			'template' => 'server_error',
 		),
-		
+	
+		'server_resource_gone' => array(
+			'template' => 'server_resource_gone',
+		),
+
 		'twitter-datagis' => array(
 			'template' => 'twitter-datagis',
 		),
+
+		'unauthorized' => array(
+			'template' => 'unauthorized',
+		),
+
+		'modal-popup-first-visit' => array(
+			'template' => 'modal-popup-first-visit',
+			'path' => $path . '/theme',
+		),
 	);
-}	
+}
+
+/**
+ * Implements hook_ctools_plugin_directory() to let the (ctools) system know
+ * the location of plugins.
+ */
+/* 
+function dul_system_ctools_plugin_directory($owner, $plugin_type) {
+	#if ($owner == 'ctools' && $plugin_type == 'access') {
+	#	return 'plugins/' . $plugin_type;
+	#}
+}
+*/
+
+/*
+function dul_system_ctools_plugin_type() {
+	return array(
+		'tasks' => array(),
+		'task_handlers' => array(),
+		'page_wizards' => array(),
+	);
+}
+*/
 
 /**
  * Generates the 404 response
@@ -182,7 +178,7 @@ function dul_system_404() {
 function dul_system_403() {
 	drupal_set_title( t('Unauthorized Request') );
 
-	$output = theme('oh-snap');
+	$output = theme('unauthorized');
 	return $output;
 }
 
@@ -195,6 +191,17 @@ function dul_system_500() {
 	$output = theme('server_error');
 	return $output;
 }
+
+/**
+ * Generates a response for HTTP 410 (Gone) errors
+ */
+function dul_system_410() {
+	drupal_set_title( t('') );
+
+	$output = theme('server_resource_gone');
+	return $output;
+}
+
 /**
  * Implements hook_permission()
  */
@@ -391,12 +398,40 @@ function dul_system_menu_alter(&$items) {
 }
 
 /**
+ * Implements hook_page_alter()
+ */
+function dul_system_page_alter(&$page) {
+	if (module_exists('duluser')) {
+		global $user;
+		if (is_first_time_login($user)) {
+			$page['modal_popup']['usermsg'] = array(
+				'#theme' => 'modal-popup-first-visit',
+				'#attached' => array(
+					'js' => array(drupal_get_path('module', 'dul_system') . '/js/modal_popup.js'),
+				),
+			);
+		}
+	}
+	/*
+	if (!empty($_SERVER['HTTPS'])) {
+		$page['modal_popup']['usermsg'] = array(
+			'#theme' => 'modal-popup-first-visit',
+			'#attached' => array(
+				'js' => array(drupal_get_path('module', 'dul_system') . '/js/modal_popup.js'),
+			),
+		);
+	}
+	*/
+}
+
+/**
  * Implements hook_preprocess()
  *
  * Add a variable named "library_address" that represents 
  * the address stored in the dul_system.footer_address system variable
  */
 function dul_system_preprocess(&$variables, $hook) {
+	
 	$variables['library_address'] = '';
 	if ($hook == 'region' && $variables['region'] == 'footer_contact') {
 		$variables['library_address'] = variable_get('dul_system.footer_address', '');
@@ -410,7 +445,7 @@ function dul_system_preprocess(&$variables, $hook) {
 	if ($hook == 'region' && $variables['region'] == 'megamenu') {
 		$variables['endeca_url'] = 'http://search.library.duke.edu/';
 		if (preg_match('/-pre/', $_SERVER['SERVER_NAME'])) {
-			$variables['endeca_url'] = 'http://search-dev.trln.org:8080/Sandbox_dukepre/';
+			$variables['endeca_url'] = 'http://search.library.duke.edu/duke-pre/';
 		}
 	}
 }
@@ -423,52 +458,3 @@ function dul_system_cron() {
 	//$content = file_get_contents('http://library.duke.edu/apps/directory/cms/feed.xml');
 	#print_r($content);
 }
-
-function dul_system_dept_load($dept_id) {
-	$q = db_select('dul_dept', 'd');
-	$q->fields('d');
-	$q->addField('d', 'email', 'dept_email');
-	$q->leftJoin('staff', 's', 'd.head_person_id = s.person_id');
-	$q->fields('s');
-	$q->addField('s', 'email', 'dept_head_email');
-	$q->condition('dept_id', $dept_id);
-	$res = $q->execute();
-	
-	$dept = $res->fetchObject();
-	$dept->members = array();
-	
-	$q = db_select('staff', 's');
-	$q->join('dul_dept_member', 'm', 'm.person_id = s.person_id');
-	$q->fields('s')
-		->condition('m.did', $dept_id)
-		->orderBy('lastname')
-		->orderBy('firstname');
-	$res = $q->execute();
-	foreach ($res as $member) {
-		$dept->members[] = $member;
-	}
-	
-	if (count($dept->members == 0) && $dept->parent_did == 1) {
-		$dept->allmembers = array();
-		$r = db_select('dul_dept', 'd')
-			->fields('d', array('did', 'dept_id'))
-			->condition('parent_did', $dept->dept_id)
-			->execute();
-			
-		foreach ($r as $child_dept) {
-			$s = db_select('staff', 's');
-			$s->join('dul_dept_member', 'dm', 'dm.person_id = s.person_id');
-			$s->fields('s');
-			$s->condition('dm.did', $child_dept->dept_id);
-			$rs = $s->execute();
-			foreach ($rs as $staff) {
-				$dept->members[] = $staff;
-				$dept->allmembers[] = $staff;
-			}
-		}
-	}
-	
-	return $dept;
-}
-
-

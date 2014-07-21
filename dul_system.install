@@ -25,6 +25,7 @@ function dul_system_schema() {
 			'email' => array('type' => 'varchar','length' => 128,'not null' => TRUE,'default' => '',),
 			'email_privacy' => array('type' => 'varchar','length' => 7,'not null' => TRUE,'default' => '',),
 			'photo' => array('type' => 'varchar','length' => 255,'default' => '',),
+			'profile' => array('type' => 'text', 'size' => 'big'),
 			'url' => array('type' => 'varchar','length' => 255,'default' => '',),
 		),
 		'primary key' => array('sid'),
@@ -109,4 +110,11 @@ function dul_system_update_7114() {
 		),
 		'primary key' => array('did', 'person_id'),
 	));
+}
+
+/**
+ * Add 'profile' field to 'staff' table
+ */
+function dul_system_update_7115() {
+	db_add_field('staff', 'profile', array('type' => 'text', 'size' => 'big'));
 }
