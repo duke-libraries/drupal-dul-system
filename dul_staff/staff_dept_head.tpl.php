@@ -5,7 +5,7 @@
 <h2>
 	<a href="/about/directory/staff/<?php print $dept->head_person_id; ?>"><?php print $dept->head_display_name; ?></a>
 	<?php if(!empty($dept->head_preferred_title)): ?>
-		<small><?php print $dept->head_preferred_title; ?></small>
+		<br /><small><?php print $dept->head_preferred_title; ?></small>
 	<?php endif; ?>
 </h2>
 <!-- /DEPARTMENT HEAD -->
