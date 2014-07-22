@@ -43,5 +43,9 @@
 </div>
 <?php endif; ?>
 <?php if (empty($dept->email_privacy) && !empty($dept->dept_email)): ?>
-<div class="personInfo personEmail"><a property="schema:email" href="mailto:<?php print $dept->dept_head_email; ?>"><?php print $dept->dept_head_email; ?></a></div>
+<div class="personInfo personEmail">
+	<strong>Contact:&nbsp;</strong><a property="schema:email" href="mailto:<?php print $dept->dept_head_email; ?>"><?php print $dept->dept_head_email; ?></a></div>
+<?php endif; ?>
+<?php if (!empty($dept->url)): ?>
+	<div property="schema:url"><a href="<?php print $dept->url; ?>">Visit Website</a></div>
 <?php endif; ?>

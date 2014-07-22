@@ -146,7 +146,7 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 		$row = array();
 		$row[] = l(t($member->display_name), 'about/directory/staff/' . $member->id);
 		#$row[] = $member->displayname;
-		$row[] = $member->title;
+		$row[] = !(empty($member->preferred_title)) ? $member->preferred_title : $member->title;
 		$row[] = $member->phone;
 		$row[] = ($member->email_privacy == NULL) ? $member->email : '';
 		$rows[] = array(
