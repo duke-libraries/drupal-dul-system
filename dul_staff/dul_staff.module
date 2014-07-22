@@ -342,6 +342,9 @@ function dul_staff_dept_load($dept_id) {
 		$dept->postal_address['zipcode'] = $matches['zip5'];
 		$dept->postal_address['city'] = $matches['city'];
 		$dept->postal_address['state'] = $matches['state'];
+		if (!empty($matches['building'])) {
+			$dept->postal_address['building'] = $matches['building'];
+		}
 		if (isset($matches['zip4'])) {
 			$dept->postal_address['zip_plus_4'] = sprintf("%s-%s", $matches['zip5'], $matches['zip4']);
 		}
@@ -363,6 +366,9 @@ function dul_staff_dept_load($dept_id) {
 			}
 		}
 	}
+
+	// replace " " spaces with "-" in the (main) phone number
+	$dept->head_phone = str_replace(' ', '-', $dept->head_phone);
 
 	$dept->members = array();
 	$dept->allmembers = array();
@@ -433,7 +439,7 @@ function dul_staff_dept_load($dept_id) {
 						}
 					}
 				}
-
+				$mem->phone = str_replace(' ', '-', $mem->phone);
 				$dept->members[] = $mem;
 				$processed_staff[] = $mem->id;
 			}

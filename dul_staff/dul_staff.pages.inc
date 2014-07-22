@@ -118,6 +118,9 @@ function dul_staff_page2($dept) {
 	return print_r($dept, TRUE);
 }
 
+/**
+ * Page callback for Directory Page (about/directory/dept)
+ */
 function dul_staff_dept(stdClass $dept, $selector=NULL) {
 	if ($selector == 'title') {
 		return $dept->name;
@@ -125,18 +128,8 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 
 	drupal_set_title($dept->name);
 	
-	$dept_head_html = '<h3>' . t($dept->head_display_name) . '</h3>';
-	if ($dept->head_preferred_title != '') {
-		$dept_head_html .= '<em>' . t($dept->head_preferred_title) . '</em>';
-	}
-	$dept_head_html .= '</h3>';
-	
-	$build['dept_head'] = array(
-		'#type' => 'markup',
-		'#markup' => $dept_head_html,
-	);
 	dpm($dept);
-	$build['dept_address'] = array(
+	$build['department_head'] = array(
 		'#theme' => 'staff_dept_head',
 		'#dept' => $dept,
 	);

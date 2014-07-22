@@ -1,6 +1,14 @@
 <?php
 
 ?>
+<!-- START DEPARTMENT HEAD NAME (and TITLE, optional) -->
+<h2>
+	<a href="/about/directory/staff/<?php print $dept->head_person_id; ?>"><?php print $dept->head_display_name; ?></a>
+	<?php if(!empty($dept->head_preferred_title)): ?>
+		<small><?php print $dept->head_preferred_title; ?></small>
+	<?php endif; ?>
+</h2>
+<!-- /DEPARTMENT HEAD -->
 
 <address>
 	<?php if (isset($dept->postal_address)): ?>
@@ -24,14 +32,16 @@
 	<?php endif; // POSTAL ADDRESS ?>
 	</div>
 </address>
-<div>
-	<div property="schema:telephone" class="personInfo personPhone">
-		<strong>Phone:&nbsp;</strong><?php print $dept->phone; ?>
-	</div>
-	<div property="schema:faxNumber" class="personInfo personFax">
-		<strong>Fax:&nbsp;</strong><?php print $dept->fax; ?>
-	</div>
-	<?php if (empty($dept->email_privacy) && !empty($dept->dept_head_email)): ?>
-	<div class="personInfo personEmail"><a property="schema:email" href="mailto:<?php print $dept->dept_head_email; ?>"><?php print $dept->dept_head_email; ?></a></div>
-	<?php endif; ?>
+<?php if (!empty($dept->phone)): ?>
+<div property="schema:telephone" class="personInfo personPhone">
+	<strong>Phone:&nbsp;</strong><?php print $dept->phone; ?>
 </div>
+<?php endif; ?>
+<?php if (!empty($dept->fax)): ?>
+<div property="schema:faxNumber" class="personInfo personFax">
+	<strong>Fax:&nbsp;</strong><?php print $dept->fax; ?>
+</div>
+<?php endif; ?>
+<?php if (empty($dept->email_privacy) && !empty($dept->dept_email)): ?>
+<div class="personInfo personEmail"><a property="schema:email" href="mailto:<?php print $dept->dept_head_email; ?>"><?php print $dept->dept_head_email; ?></a></div>
+<?php endif; ?>
