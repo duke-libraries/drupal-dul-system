@@ -77,10 +77,10 @@ function dul_system_menu() {
  * 
  */
 function dul_system_menu_link_alter(&$link) {
-	kpr('in link alter');
-	if ($link['module'] == 'menu') {
-		kpr($link);
-	}
+	//kpr('in link alter');
+	//if ($link['module'] == 'menu') {
+	//	kpr($link);
+	//}
 }
 
 /**
