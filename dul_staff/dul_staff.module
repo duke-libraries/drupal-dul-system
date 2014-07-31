@@ -132,15 +132,41 @@ function dul_staff_entity_info() {
 */
 
 /**
+ * Implementation of entity_load
+ * Fetch data from shib_authmap table and 
+ * determine a user's NetID
+ */
+function dul_staff_entity_load($entities, $type) {
+	if ($type == 'user' && module_exists('shib_auth')) {
+		// fetch a netid
+		foreach ($entities as $e) {
+			if (!isset($e->netid)) {
+				$query = db_select('shib_authmap', 's')
+					->fields('s')
+					->condition('uid', $e->uid);
+				$result = $query->execute();
+
+				$o = $result->fetchObject();
+				$pieces = explode('@', $o->targeted_id);
+				$e->netid = $pieces[0];
+			}	// if
+		}	// foreach
+	}	// if
+}
+
+/**
  * Implements hook_form_alter for user profile form
  */
 function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
 	//dpm($form);
 	// get the email address of the user in question so we can grab the netid
-	$mail = $form_state['user']->mail;
-	$pieces = explode("@", $mail);
-	$potential_netid = $pieces[0];
+	// $mail = $form_state['user']->mail;
+	// $pieces = explode("@", $mail);
+	// $potential_netid = $pieces[0];
 		
+	$potential_netid = isset($form_state['user']->netid) ? $form_state['user']->netid : FALSE;
+
+	if ($potential_netid) {
 	// retrieve staff person 'profile' data and display as a field
 	db_set_active('django');
 	$result = db_query(
@@ -180,6 +206,7 @@ function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
 		$form_state['staff_data']['keywords_old'] = $person->keywords;
 		
 		$form['#submit'][] = 'dul_staff_staff_directory_submit';
+	}
 	}
 }
 
