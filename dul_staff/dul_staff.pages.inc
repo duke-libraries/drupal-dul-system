@@ -65,6 +65,24 @@ function dul_staff_person(stdClass $person, $selector=NULL) {
 	}
 
 	$page = array();
+	$page['staff_search'] = array(
+		'#type' => 'container',
+		'#attributes' => array(
+			'class' => array('feature-box'),
+		),
+	);
+	$page['staff_search']['search-title'] = array(
+		'#type' => 'markup',
+		'#markup' => t('Search'),
+		'#prefix' => '<div class="feature-box-title">',
+		'#suffix' => '</div>',
+	);
+	$page['staff_search']['search'] = array(
+		'#type' => 'textfield',
+		'#name' => 'search_staff_keywords',
+		'#prefix' => '<div class="feature-box-content">',
+		'#suffix' => '</div>',
+	);
 
 	$page['person'] = array(
 		'#theme' => 'staff_person',
@@ -129,6 +147,24 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 	drupal_set_title($dept->name);
 	
 	dpm($dept);
+	$build['staff_search'] = array(
+		'#type' => 'container',
+		'#attributes' => array(
+			'class' => array('feature-box'),
+		),
+	);
+	$build['staff_search']['search-title'] = array(
+		'#type' => 'markup',
+		'#markup' => t('Search'),
+		'#prefix' => '<div class="feature-box-title">',
+		'#suffix' => '</div>',
+	);
+	$build['staff_search']['search'] = array(
+		'#type' => 'textfield',
+		'#name' => 'search_staff_keywords',
+		'#prefix' => '<div class="feature-box-content">',
+		'#suffix' => '</div>',
+	);
 	$build['department_head'] = array(
 		'#theme' => 'staff_dept_head',
 		'#dept' => $dept,
