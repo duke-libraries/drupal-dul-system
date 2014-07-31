@@ -163,7 +163,7 @@ function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
 			'#weight' => 2,
 		);
 		$form['staff_data']['staff_keywords'] = array(
-			'#type' => 'textfield',
+			'#type' => 'textarea',
 			'#default_value' => $person->keywords,
 			'#title' => t('Keywords'),
 			'#description' => t('Comma-separated.  These keywords are used by the Bento Search facilty'),
