@@ -149,6 +149,7 @@ function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
 		array(':netid' => $potential_netid));
 	
 	watchdog('dul_staff', sprintf("potential netid for %s is %s", $form_state['user']->name, $potential_netid));
+	dpm($form_state['user']);
 		
 	$person = $result->fetchObject();	
 	db_set_active();
