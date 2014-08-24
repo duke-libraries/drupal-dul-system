@@ -1,0 +1,15 @@
+/* STAFF SEARCH BOX
+------------------------------------------------ */
+
+.dul-staff-search-box {
+	float: right;
+	clear: right;
+	margin-bottom: 20px;
+}
+
+.dul-staff-search-box .form-item {
+	float: left;
+	margin-right: 10px;
+	margin-top: 0 !important;
+	margin-bottom: 0 !important;
+}
