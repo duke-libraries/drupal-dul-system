@@ -65,25 +65,8 @@ function dul_staff_person(stdClass $person, $selector=NULL) {
 	}
 
 	$page = array();
-	$page['staff_search'] = array(
-		'#type' => 'container',
-		'#attributes' => array(
-			'class' => array('feature-box'),
-		),
-	);
-	$page['staff_search']['search-title'] = array(
-		'#type' => 'markup',
-		'#markup' => t('Search'),
-		'#prefix' => '<div class="feature-box-title">',
-		'#suffix' => '</div>',
-	);
-	$page['staff_search']['search'] = array(
-		'#type' => 'textfield',
-		'#name' => 'search_staff_keywords',
-		'#prefix' => '<div class="feature-box-content">',
-		'#suffix' => '</div>',
-	);
-
+	$page['staff_search']['form'] = drupal_get_form('dul_staff_staff_search_form');
+	
 	$page['person'] = array(
 		'#theme' => 'staff_person',
 		'#person' => $person,
@@ -93,6 +76,48 @@ function dul_staff_person(stdClass $person, $selector=NULL) {
 	);
 
 	return $page;
+}
+
+/*
+ * Form for the staff search box that appears on the 
+ * Staff Directory pages.
+ * 
+ * Called from 'drupal_get_form'
+ * @drupal_get_form
+ */
+function dul_staff_staff_search_form($form, $form_state) {
+	# $form = initialized form elementdefine the search form element.
+	
+	# assign a class of 'form-inline' to the form.
+	# and attach a CSS file so it loads when the form is rendered
+	$form['#attributes'] = array('class' => array('form-inline', 'dul-staff-search-box'));
+	$form['#attached']['css'][] = drupal_get_path('module', 'dul_staff') . '/css/staff_search.css';
+		
+	# keywords elements
+	$form['keywords'] = array(
+		'#type' => 'textfield',
+		'#attributes' => array(
+			# Bootstrap-related attribute
+			'placeholder' => 'Search Staff by name or dept',
+			
+			# uncomment to enable 'typeahead'
+			// 'data-provide' => 'typeahead',
+			// 'data-source' => '***SOME SOURCE***',
+		),
+	);
+	$form['go'] = array(
+		'#type' => 'submit',
+		'#value' => t('Go'), 
+	);
+
+	return $form;
+}
+
+function dul_staff_staff_search_form_submit($form, &$form_state) {
+	dpm($form_state['values']);
+	// use db_query as we'll need to specify a number of 
+	// conditions.
+	// Also, we'll use MATCH (col1, col2) AGAINST (expr)
 }
 
 function dul_staff_netid($netid) {
@@ -145,27 +170,11 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 	}
 
 	drupal_set_title($dept->name);
+
+	$page = array();
+	$page['staff_search']['form'] = drupal_get_form('dul_staff_staff_search_form');
 	
-	dpm($dept);
-	$build['staff_search'] = array(
-		'#type' => 'container',
-		'#attributes' => array(
-			'class' => array('feature-box'),
-		),
-	);
-	$build['staff_search']['search-title'] = array(
-		'#type' => 'markup',
-		'#markup' => t('Search'),
-		'#prefix' => '<div class="feature-box-title">',
-		'#suffix' => '</div>',
-	);
-	$build['staff_search']['search'] = array(
-		'#type' => 'textfield',
-		'#name' => 'search_staff_keywords',
-		'#prefix' => '<div class="feature-box-content">',
-		'#suffix' => '</div>',
-	);
-	$build['department_head'] = array(
+	$page['department_head'] = array(
 		'#theme' => 'staff_dept_head',
 		'#dept' => $dept,
 	);
@@ -189,7 +198,7 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 			'data' => $row,
 		);
 	}
-	$build['members'] = array(
+	$page['members'] = array(
 		'#theme' => 'table',
 		'#header' => $header,
 		'#rows' => $rows,
@@ -198,5 +207,5 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 			'class' => array('table', 'table-condensed'),
 		)
 	);
-	return $build;
+	return $page;
 }

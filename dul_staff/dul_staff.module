@@ -147,6 +147,8 @@ function dul_staff_entity_load($entities, $type) {
 				$result = $query->execute();
 
 				$o = $result->fetchObject();
+				if ($o === FALSE) { continue; }
+				
 				watchdog('dul_system', print_r($o, TRUE));
 				$pieces = explode('@', $o->targeted_id);
 				$e->netid = $pieces[0];
