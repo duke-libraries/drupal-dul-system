@@ -61,3 +61,10 @@ function theme_staff_directory($variables) {
 	return render($table);
 }
 
+/**
+ * Default Theme implementation for staff search results
+ * 
+ */
+function theme_staff_search_results($variables) {
+	return 'Staff results here';
+}
