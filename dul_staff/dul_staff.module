@@ -81,6 +81,12 @@ function dul_staff_menu() {
 		//	'file' => 'dul_staff.pages.inc',
 		//	'access callback' => TRUE,
 		//),
+		'find/staff-dept' => array(
+			'page callback' => 'dul_staff_search_results',
+			'file' => 'dul_staff.pages.inc',
+			'access callback' => TRUE,
+			'type' => MENU_CALLBACK,		// this prevents the item from appearing in the visible menu
+		),
 	);
 }
 
@@ -109,9 +115,76 @@ function dul_staff_theme($existing, $type, $theme, $path) {
 		'core-services' => array(
 			'template' => 'dul_system-core-services',
 		),
+		'staff_search_results' => array(
+			'variables' => array('staff_rows' => NULL, 'dept_rows' => NULL),
+			'file' => 'dul_staff.theme.inc',
+		),
 	);
 }
 
+/**
+ * Implements hook_search_info
+ */
+function dul_staff_search_info() {
+	return array(
+		'title' => 'Library Staff & Departments',
+	);
+}
+
+function dul_staff_search_access() {
+	return TRUE;
+}
+
+/**
+ * Implements hook_search_execute()
+ */
+function dul_staff_search_execute($keys) {
+	$slugs = preg_split('/[\s,]+/', $keys);
+	$find = array();
+	db_set_active('django');
+
+	$staff_query = db_select('directory_person', 'p');
+	$staff_query->addExpression("'staff'", 'object_type');
+	$staff_query->addField('p', 'display_name', 'display_value');
+	$staff_query->addField('p', 'id', 'display_id');
+	$staff_query->addField('p', 'preferred_title', 'label_1');
+	$staff_query->addField('p', 'title', 'label_2');
+	
+	$db_or = db_or();
+	foreach ($slugs as $slug) {
+		$db_or->where('MATCH (last_name, first_name, preferred_title, title) AGAINST (:slug IN BOOLEAN MODE)', array(':slug' => $slug));
+	}
+	$staff_query->condition($db_or);
+	$staff_result = $staff_query->execute();
+	foreach ($staff_result as $o) {
+		$find[] = array(
+			'title' => $o->display_value,
+			'link' => url('about/directory/staff/' . $o->display_id),
+		);
+	}
+	
+	$dept_query = db_select('directory_orgunit', 'd');
+	$dept_query->addExpression("'dept'", 'object_type');
+	$dept_query->addField('d', 'name', 'display_value');
+	$dept_query->addField('d', 'id', 'display_id');
+	$dept_query->addExpression('NULL', 'label_1');
+	$dept_query->addExpression('NULL', 'label_2');
+	$dept_db_or = db_or();
+	foreach ($slugs as $slug) {
+		$dept_db_or->where('MATCH (name) AGAINST (:slug IN BOOLEAN MODE)', array(':slug' => $slug));
+	}
+	$dept_query->condition($dept_db_or);
+	$dept_result = $dept_query->execute();
+	foreach ($dept_result as $o) {
+		$find[] = array(
+			'title' => $o->display_value,
+			'link' => url('about/directory/dept/' . $o->display_id),
+		);
+	}
+	
+	db_set_active();
+	return $find;
+}
 /*
 function dul_staff_entity_info() {
 	return array(
@@ -155,6 +228,11 @@ function dul_staff_entity_load($entities, $type) {
 			}	// if
 		}	// foreach
 	}	// if
+}
+
+function dul_staff_form_search_block_form_alter(&$form, &$form_state) {
+	$form['#attributes'] = array('class' => array('form-inline', 'dul-staff-search-box'));
+	$form['#attached']['css'][] = drupal_get_path('module', 'dul_staff') . '/css/staff_search.css';
 }
 
 /**
