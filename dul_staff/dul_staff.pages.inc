@@ -59,13 +59,12 @@ function dul_staff_person(stdClass $person, $selector=NULL) {
 	
 	$allow_user_edit = FALSE;
 
-	if (module_exists('shib_auth')) {
+	if (module_exists('shib_auth') && isset($_SERVER['eppn'])) {
 		$eppn = explode('@', $_SERVER['eppn']);
 		$allow_user_edit = ($eppn[0] == $person->net_id);
 	}
 
 	$page = array();
-	$page['staff_search']['form'] = drupal_get_form('dul_staff_staff_search_form');
 	
 	$page['person'] = array(
 		'#theme' => 'staff_person',
@@ -76,48 +75,6 @@ function dul_staff_person(stdClass $person, $selector=NULL) {
 	);
 
 	return $page;
-}
-
-/*
- * Form for the staff search box that appears on the 
- * Staff Directory pages.
- * 
- * Called from 'drupal_get_form'
- * @drupal_get_form
- */
-function dul_staff_staff_search_form($form, $form_state) {
-	# $form = initialized form elementdefine the search form element.
-	
-	# assign a class of 'form-inline' to the form.
-	# and attach a CSS file so it loads when the form is rendered
-	$form['#attributes'] = array('class' => array('form-inline', 'dul-staff-search-box'));
-	$form['#attached']['css'][] = drupal_get_path('module', 'dul_staff') . '/css/staff_search.css';
-		
-	# keywords elements
-	$form['keywords'] = array(
-		'#type' => 'textfield',
-		'#attributes' => array(
-			# Bootstrap-related attribute
-			'placeholder' => 'Search Staff by name or dept',
-			
-			# uncomment to enable 'typeahead'
-			// 'data-provide' => 'typeahead',
-			// 'data-source' => '***SOME SOURCE***',
-		),
-	);
-	$form['go'] = array(
-		'#type' => 'submit',
-		'#value' => t('Go'), 
-	);
-
-	return $form;
-}
-
-function dul_staff_staff_search_form_submit($form, &$form_state) {
-	dpm($form_state['values']);
-	// use db_query as we'll need to specify a number of 
-	// conditions.
-	// Also, we'll use MATCH (col1, col2) AGAINST (expr)
 }
 
 function dul_staff_netid($netid) {
@@ -172,7 +129,6 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 	drupal_set_title($dept->name);
 
 	$page = array();
-	$page['staff_search']['form'] = drupal_get_form('dul_staff_staff_search_form');
 	
 	$page['department_head'] = array(
 		'#theme' => 'staff_dept_head',
@@ -190,10 +146,16 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 	foreach (array_merge($dept->members, $dept->allmembers) as $member) {
 		$row = array();
 		$row[] = l(t($member->display_name), 'about/directory/staff/' . $member->id);
-		#$row[] = $member->displayname;
 		$row[] = !(empty($member->preferred_title)) ? $member->preferred_title : $member->title;
 		$row[] = $member->phone;
-		$row[] = ($member->email_privacy == NULL) ? $member->email : '';
+		$row[] = ($member->email_privacy == NULL) ? 
+			l('<i class="icon-envelope"></i>', 'mailto:' . $member->email, 
+				array(
+					'attributes' => array('class' => array('btn','btn-small')),
+					'html' => TRUE,
+				)
+			) : 
+			'';
 		$rows[] = array(
 			'data' => $row,
 		);
