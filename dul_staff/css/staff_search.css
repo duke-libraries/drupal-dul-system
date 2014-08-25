@@ -13,3 +13,9 @@
 	margin-top: 0 !important;
 	margin-bottom: 0 !important;
 }
+
+.page-about-directory .block-search-form {
+	margin-bottom: 0.5em;
+	float: right;
+	clear: right;
+}
