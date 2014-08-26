@@ -139,10 +139,16 @@ function dul_staff_search_access() {
  * Implements hook_search_execute()
  */
 function dul_staff_search_execute($keys) {
+	// split the $keys into an array -- using whitespace and the comma as delimiters
 	$slugs = preg_split('/[\s,]+/', $keys);
+	
+	// the $find array will store the results, later in the function
 	$find = array();
+	
+	// switch to the Django database
 	db_set_active('django');
 
+	// create the directory_person query
 	$staff_query = db_select('directory_person', 'p');
 	$staff_query->addExpression("'staff'", 'object_type');
 	$staff_query->addField('p', 'display_name', 'display_value');
@@ -150,6 +156,7 @@ function dul_staff_search_execute($keys) {
 	$staff_query->addField('p', 'preferred_title', 'label_1');
 	$staff_query->addField('p', 'title', 'label_2');
 	
+	// create an OR to store clause for each $slug
 	$db_or = db_or();
 	foreach ($slugs as $slug) {
 		$db_or->where('MATCH (last_name, first_name, preferred_title, title) AGAINST (:slug IN BOOLEAN MODE)', array(':slug' => $slug));
@@ -157,12 +164,15 @@ function dul_staff_search_execute($keys) {
 	$staff_query->condition($db_or);
 	$staff_result = $staff_query->execute();
 	foreach ($staff_result as $o) {
+		// each element in the $find array must contain a 'title' and 'link' key
+		// use Drupal's 'url()' function to ensure the display of the url
 		$find[] = array(
 			'title' => $o->display_value,
 			'link' => url('about/directory/staff/' . $o->display_id),
 		);
 	}
 	
+	// do the same stuff for a department search...
 	$dept_query = db_select('directory_orgunit', 'd');
 	$dept_query->addExpression("'dept'", 'object_type');
 	$dept_query->addField('d', 'name', 'display_value');
