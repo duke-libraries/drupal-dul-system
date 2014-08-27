@@ -431,6 +431,8 @@ function dul_staff_dept_load($dept_id) {
 	$q = db_select('directory_orgunit', 'd');
 	$q->fields('d');
 	$q->addField('d', 'email', 'dept_email');
+	$q->addField('d', 'campus_box', 'dept_campus_box');
+	$q->addField('d', 'physical_address', 'dept_physical_address');
 	$q->leftJoin('directory_person', 's', 'd.head_id = s.id');
 	$q->addField('s', 'id', 'head_person_id');
 	$q->addField('s', 'display_name', 'head_display_name');
