@@ -346,7 +346,7 @@ function locguide_find_barcode($barcode) {
 	$locMap = $model->getLocationMapByBarcode($barcode);
 	if (!is_null($locMap->areaMap)) {
 		dpm($locMap->areaMap);
-		return theme('area-map', array('areaMap' => $locMap));
+		return theme('area-map', array('areaMap' => $locMap->areaMap));
 	} elseif (!is_null($locMap->externalLink)) {
 		dpm($locMap->externalLink);		
 		drupal_set_title($locMap->externalLink->extlink_title);
