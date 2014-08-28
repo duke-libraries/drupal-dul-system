@@ -169,6 +169,7 @@ function dul_staff_search_execute($keys) {
 		$find[] = array(
 			'title' => $o->display_value,
 			'link' => url('about/directory/staff/' . $o->display_id),
+			'type' => 'Staff',
 		);
 	}
 	
@@ -189,6 +190,7 @@ function dul_staff_search_execute($keys) {
 		$find[] = array(
 			'title' => $o->display_value,
 			'link' => url('about/directory/dept/' . $o->display_id),
+			'type' => 'Department',
 		);
 	}
 	
