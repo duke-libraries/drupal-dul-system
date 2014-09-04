@@ -3,6 +3,38 @@
 include_once 'dul_system.forms.inc';
 
 /**
+ * Implements hook_init()
+ */
+function dul_system_init() {
+	
+}
+
+/**
+ * Implements preprocess_page
+ * Add content to the footer region such that 
+ * the Proactive Chat H3lp widget markup is present
+ */
+function dul_system_preprocess_page(&$variables) {
+	//dpm(theme('proactive-chat-h3lp', array()));
+	#$variables['page']['page_bottom']['proactive_chat'] = array(
+	#	'#type' => 'markup',
+	#	'#markup' => theme('proactive-chat-h3lp', array()),
+	#);
+	#dpm($variables);
+}
+
+function dul_system_page_build(&$page) {
+	$page['page_bottom']['h3lp-proactive-chat'] = array(
+		'#theme' => 'proactive-chat-h3lp',
+		'#attached' => array(
+			'js' => array(
+				drupal_get_path('module', 'dul_system') . '/js/proactive-chat.js',
+			),
+		)
+	);	
+}
+
+/**
  * Implements hook_menu()
  */
 function dul_system_menu() {
@@ -135,6 +167,11 @@ function dul_system_theme($existing, $type, $theme, $path) {
 			'template' => 'modal-popup-first-visit',
 			'path' => $path . '/theme',
 		),
+		
+		'proactive-chat-h3lp' => array(
+			'template' => 'proactive-chat-h3lp',
+			'path' => $path . '/theme',
+		)
 	);
 }
 
@@ -234,8 +271,6 @@ function dul_system_block_info() {
 		'info' => t('Twitter Widget for Data and GIS'),
 		'cache' => DRUPAL_NO_CACHE,
 	);
-
-
 
 	return $blocks;
 }
