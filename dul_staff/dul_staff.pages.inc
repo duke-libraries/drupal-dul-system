@@ -148,14 +148,14 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 		$row[] = l(t($member->display_name), 'about/directory/staff/' . $member->id);
 		$row[] = !(empty($member->preferred_title)) ? $member->preferred_title : $member->title;
 		$row[] = $member->phone;
-		$row[] = ($member->email_privacy == NULL) ? 
+		$row[] = ($member->email_privacy != '1') ? 
 			l('<i class="icon-envelope"></i>', 'mailto:' . $member->email, 
 				array(
 					'attributes' => array('class' => array('btn','btn-small')),
 					'html' => TRUE,
 				)
 			) : 
-			'';
+			'&nbsp;';
 		$rows[] = array(
 			'data' => $row,
 		);
