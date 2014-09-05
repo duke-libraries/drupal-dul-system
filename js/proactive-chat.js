@@ -33,7 +33,7 @@
 	    		dialog.dialog({
 	    			dialogClass : "proactiveH3lp",
 	    			resizable : false,
-	    			position: { my: "center top", at: "center top", of: "#section-content" },
+	    			position: { my: "right bottom", at: "right bottom", of: window },
 	    			buttons: {
 	    				"No Thanks" : function() {
 	    					// initiate google analytics event tracking
