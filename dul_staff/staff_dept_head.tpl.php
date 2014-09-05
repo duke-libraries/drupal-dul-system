@@ -1,6 +1,19 @@
 <?php
 
 ?>
+<address>
+<?php if (!empty($dept->dept_campus_box)): ?>
+	<div>
+		<strong>Campus Box: </strong><?php print $dept->dept_campus_box; ?>
+	</div>
+<?php endif; ?>
+<?php if (!empty($dept->dept_physical_address)): ?>
+	<div property="schema:address" itemprop="address" itemtype="http://schema.org/PostalAddress">
+		<p><?php print $dept->dept_physical_address; ?></p>
+	</div>
+<?php endif; ?>
+</address>
+
 <!-- START DEPARTMENT HEAD NAME (and TITLE, optional) -->
 <h2>
 	<a href="/about/directory/staff/<?php print $dept->head_person_id; ?>"><?php print $dept->head_display_name; ?></a>
