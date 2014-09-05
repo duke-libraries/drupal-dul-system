@@ -172,39 +172,48 @@ function dul_system_theme($existing, $type, $theme, $path) {
 	return array(
 		'welcome-loggedin' => array(
 			'template' => 'welcome-loggedin',
+			'variables' => array(),
 		),
 		'welcome-anonymous' => array(
 			'template' => 'welcome-anonymous'
+			'variables' => array(),
 		),
 
 		'oh-snap' => array(
 			'template' => 'oh-snap',
+			'variables' => array(),
 		),
 		
 		'server_error' => array(
 			'template' => 'server_error',
+			'variables' => array(),
 		),
 	
 		'server_resource_gone' => array(
 			'template' => 'server_resource_gone',
+			'variables' => array(),
 		),
 
 		'twitter-datagis' => array(
 			'template' => 'twitter-datagis',
+			'variables' => array(),
 		),
 
 		'unauthorized' => array(
 			'template' => 'unauthorized',
+			'variables' => array(),
 		),
 
 		'modal-popup-first-visit' => array(
 			'template' => 'modal-popup-first-visit',
 			'path' => $path . '/theme',
+			'variables' => array(),
 		),
 		
 		'proactive-chat-h3lp' => array(
 			'template' => 'proactive-chat-h3lp',
 			'path' => $path . '/theme',
+			'variables' => array(),
 		)
 	);
 }
