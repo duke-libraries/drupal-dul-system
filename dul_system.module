@@ -175,7 +175,7 @@ function dul_system_theme($existing, $type, $theme, $path) {
 			'variables' => array(),
 		),
 		'welcome-anonymous' => array(
-			'template' => 'welcome-anonymous'
+			'template' => 'welcome-anonymous',
 			'variables' => array(),
 		),
 
