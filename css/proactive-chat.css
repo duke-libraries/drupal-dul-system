@@ -1,0 +1,28 @@
+.ui-dialog .ui-dialog-content {
+	border: none;
+	position: relative;
+	padding: .5em 1em;
+	background: #EEE;
+}
+
+.ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset {
+	float: none;
+	text-align: center;
+}
+
+.ui-dialog .ui-dialog-buttonpane {
+	text-align: center !important;
+	padding: .3em .4em .5em .4em !important;
+	border-color: #AAA;
+	border-width: 1px 0 0 0;
+}
+
+.ui-dialog .ui-dialog-titlebar {
+	background-color: #001A57;
+	padding: .4em 1em;
+}
+
+p.proactiveHelpPrompt {
+	font-weight: bold;
+	color: #0062a0;
+}
