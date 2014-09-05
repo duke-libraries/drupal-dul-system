@@ -25,13 +25,15 @@
 	    	var dialog = dialogs.filter(function() {
 	    		return $(this).parent().is(':visible');
 	    	});
+	    	//var dialog = dialogs;
 	
 	    	// TODO check for the cookie that indicated the patron
 	    	// closed the chat dialog in a previous visit.
 	    	if (dialog.length > 0 && ph_patronDidNotOpenChat()) {
 	    		dialog.dialog({
 	    			dialogClass : "proactiveH3lp",
-	    			position: { my: "center top", at: "center top", of: window },
+	    			resizable : false,
+	    			position: { my: "center top", at: "center top", of: "#section-content" },
 	    			buttons: {
 	    				"No Thanks" : function() {
 	    					// initiate google analytics event tracking

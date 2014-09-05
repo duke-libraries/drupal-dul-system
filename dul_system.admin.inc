@@ -43,3 +43,23 @@ function dul_system_feed_settings() {
 function dul_system_feed_settings_submit($form, $form_state) {
 	variable_set('dul_system.staff_directory_feed_url', $form_state['values']['staff_directory_feed_url']);
 }
+
+/**
+ * Form to specify when the Proactive Chat H3lp widget appears
+ */
+function dul_system_proactive_chat_settings($form, &$form_state) {
+	$form['proactive_chat_aware_paths'] = array(
+		'#type' => 'textarea',
+		'#rows' => 5,
+		'#default_value' => variable_get('dul_system.proactive_chat_aware_paths'),
+		'#title' => t('Enable Proactive Chat Widget For These Paths:'),
+	);
+	// specify the "submit" callback function here...
+	$form['#submit'][] = 'dul_system_proactive_chat_settings_submit';
+	
+	return system_settings_form($form);
+}
+
+function dul_system_proactive_chat_settings_submit($form, $form_state) {
+	variable_set('dul_system.proactive_chat_aware_paths', $form_state['values']['proactive_chat_aware_paths']);
+}

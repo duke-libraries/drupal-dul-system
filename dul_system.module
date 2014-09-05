@@ -10,28 +10,53 @@ function dul_system_init() {
 }
 
 /**
+ * Implements hook_preprocess_html()
+ * Main object is to load jquery UI which, for some unknown reason
+ * is not loaded for anonymous users
+ */
+function dul_system_preprocess_html(&$variables) {
+	# https://www.drupal.org/node/2165555
+	drupal_add_library('system', 'ui.slider');
+}
+
+/**
  * Implements preprocess_page
  * Add content to the footer region such that 
  * the Proactive Chat H3lp widget markup is present
  */
 function dul_system_preprocess_page(&$variables) {
-	//dpm(theme('proactive-chat-h3lp', array()));
-	#$variables['page']['page_bottom']['proactive_chat'] = array(
-	#	'#type' => 'markup',
-	#	'#markup' => theme('proactive-chat-h3lp', array()),
-	#);
-	#dpm($variables);
+	// use this hook to add elements at the page level
+}
+
+function dul_system_css_alter(&$css) {
+
 }
 
 function dul_system_page_build(&$page) {
-	$page['page_bottom']['h3lp-proactive-chat'] = array(
-		'#theme' => 'proactive-chat-h3lp',
-		'#attached' => array(
-			'js' => array(
-				drupal_get_path('module', 'dul_system') . '/js/proactive-chat.js',
-			),
-		)
-	);	
+	// get the current path, and only apply the proactive chat inclusions
+	// when the path is 'find/bento'
+	$path = current_path();
+	$proactive_chat_aware_paths = variable_get('dul_system.proactive_chat_aware_paths', 'about');
+
+	if (empty($proactive_chat_aware_paths)) {
+		return;
+	}
+	
+	if (drupal_match_path($path, $proactive_chat_aware_paths)) {
+		$page['page_bottom']['h3lp-proactive-chat'] = array(
+			'#theme' => 'proactive-chat-h3lp',
+			'#attached' => array(
+				'js' => array(
+					drupal_get_path('module', 'dul_system') . '/js/proactive-chat.js',
+				),
+				'css' => array(
+					drupal_get_path('module', 'dul_system') . '/css/proactive-chat.css' => array(
+						'weight' => 999,
+					)
+				)
+			)
+		);	
+	}
 }
 
 /**
@@ -63,6 +88,15 @@ function dul_system_menu() {
 			'description' => 'Set the URLs for various feeds (e.g., Staff Directory)',
 			'page callback' => 'drupal_get_form',
 			'page arguments' => array('dul_system_feed_settings'),
+			'access arguments' => array('administer site configuration'),
+			'type' => MENU_NORMAL_ITEM,
+			'file' => 'dul_system.admin.inc',
+		),
+		'admin/config/library/proactive_chat' => array(
+			'title' => 'Proactive Chat Widget',
+			'description' => 'Control where the Proactive Chat Widget appears',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('dul_system_proactive_chat_settings'),
 			'access arguments' => array('administer site configuration'),
 			'type' => MENU_NORMAL_ITEM,
 			'file' => 'dul_system.admin.inc',
