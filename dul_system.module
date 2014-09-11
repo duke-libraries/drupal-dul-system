@@ -16,7 +16,8 @@ function dul_system_init() {
  */
 function dul_system_preprocess_html(&$variables) {
 	# https://www.drupal.org/node/2165555
-	drupal_add_library('system', 'ui.slider');
+	#drupal_add_library('system', 'ui.slider');
+	#drupal_add_library('system', 'ui.dialog');
 }
 
 /**
@@ -29,9 +30,13 @@ function dul_system_preprocess_page(&$variables) {
 }
 
 function dul_system_css_alter(&$css) {
-
+	dpm($css);
 }
 
+/**
+ * Implements hook_page_build
+ * Add markup to support LibraryH3lp Proactive Chat widget
+ */
 function dul_system_page_build(&$page) {
 	// get the current path, and only apply the proactive chat inclusions
 	// when the path is 'find/bento'

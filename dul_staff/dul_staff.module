@@ -153,8 +153,9 @@ function dul_staff_search_execute($keys) {
 	$staff_query->addExpression("'staff'", 'object_type');
 	$staff_query->addField('p', 'display_name', 'display_value');
 	$staff_query->addField('p', 'id', 'display_id');
-	$staff_query->addField('p', 'preferred_title', 'label_1');
+	$staff_query->addField('p', 'preferred_title');
 	$staff_query->addField('p', 'title', 'label_2');
+	$staff_query->addField('p', 'phone', 'telephone_number');
 	
 	// create an OR to store clause for each $slug
 	$db_or = db_or();
@@ -166,10 +167,18 @@ function dul_staff_search_execute($keys) {
 	foreach ($staff_result as $o) {
 		// each element in the $find array must contain a 'title' and 'link' key
 		// use Drupal's 'url()' function to ensure the display of the url
+		$extra = array();
+		if (!empty($o->preferred_title)) {
+			$extra['preferred_title'] = $o->preferred_title;
+		}
+		if (!empty($o->telephone_number)) {
+			$extra['telephone_number'] = $o->telephone_number;
+		}
 		$find[] = array(
 			'title' => $o->display_value,
 			'link' => url('about/directory/staff/' . $o->display_id),
 			'type' => 'Staff',
+			'extra' => $extra,
 		);
 	}
 	

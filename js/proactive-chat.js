@@ -9,7 +9,8 @@
 
 		  // TODO - put this in "Institution Skin" specific JS file
 		  $( '#proactiveChatUserTrigger' ).click(function(evt) {
-			  $( '.dialog' ).dialog('close');
+		  	$( '.dialog').modal('hide');
+			  //$( '.dialog' ).dialog('close');
 			  _gaq.push(['_trackEvent', 'ChatNow', 'ProactiveChat', 'Catalog']);
 			  window.open(
 					  'https://libraryh3lp.com/chat/duke-proactive@chat.libraryh3lp.com?skin=21014', 
@@ -30,6 +31,14 @@
 	    	// TODO check for the cookie that indicated the patron
 	    	// closed the chat dialog in a previous visit.
 	    	if (dialog.length > 0 && ph_patronDidNotOpenChat()) {
+	    		dialog
+	    			.on('shown', function() {
+	    				ph_setCookie(phChatCookieName, "opened", 1);
+	    		}).on('hidden', function() {
+	    			_gaq.push(['_trackEvent', 'Close', 'ProactiveChat', 'Catalog']);
+	    		}).modal({backdrop: false}).modal('show');
+	    		
+	    		/*
 	    		dialog.dialog({
 	    			dialogClass : "proactiveH3lp",
 	    			resizable : false,
@@ -54,6 +63,7 @@
 	    				duration: 1000
 	    			}
 	    		});
+	    		*/
 	    	} else {
 	    		setTimeout(showDialog, 15000);
 	    	}

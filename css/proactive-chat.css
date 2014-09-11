@@ -26,3 +26,9 @@ p.proactiveHelpPrompt {
 	font-weight: bold;
 	color: #0062a0;
 }
+
+.modal, .modal.fade.in {
+	top: auto !important;
+	bottom: 5%;
+	right: 5%;
+}

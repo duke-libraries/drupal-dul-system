@@ -8,13 +8,33 @@ what displays when your queue is AVAILABLE. -->
 <!-- The dialog id div is for your proactive chat invitation. Swap out YOUR-QUEUE-NAME
 with your real queue name and 9999 with your desired Widget ID number. -->
 
-  <div class="dialog" style="display: none; background-color:#F8F8F8;">
+
+	<!-- Markup for Bootstrap-modal dialog -->
+	<div id="ph_modal" class="dialog modal hide fade" tabindex="1" role="dialog" aria-labelledby="phModalLabel" aria-hidden="true">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+			<h3 id="phModalLabel">Duke University Libraries</h3>
+		</div>
+		<div class="modal-body">
+	  	<p class="proactiveHelpPrompt" style="text-align:center; font-size:1.3em;">Can we help you?</p>
+	  	<a id="proactiveChatUserTrigger" href="#">
+	  		<img style="margin-left:auto; margin-right:auto; display:block;" 
+	  				 border="0" alt="We're online, click to chat" 
+	  				 src="http://library.duke.edu/static/librarycatalog/images/chat-now3.png"/>
+	    </a>		
+		</div>
+		<div class="modal-footer text-center">
+			<button class="btn" data-dismiss="modal" aria-hidden="true">No Thanks</button>
+		</div>
+	</div>	
+
+  <!--div class="dialog" style="display: none; background-color:#F8F8F8;">
   	<p class="proactiveHelpPrompt" style="text-align:center; font-size:1.3em;">Can we help you?</p>
   	<a id="proactiveChatUserTrigger" href="#">
-  		<img style="margin-left:auto; margin-right:auto; display:block; border="0" alt="We're online, click to chat" 
+  		<img style="margin-left:auto; margin-right:auto; display:block;" border="0" alt="We're online, click to chat" 
   			 src="http://library.duke.edu/static/librarycatalog/images/chat-now3.png"/>
     </a>
-  </div>
+  </div-->
 
   <!-- Put your regular (non-proactive) in-page chat code here. This example uses a pop-out
   widget (swap out your real queue name and widget ID number) arising from a small image. Leave
@@ -62,4 +82,4 @@ var y = document.getElementsByTagName("script")[0]; y.parentNode.insertBefore(x,
 	  var closedChat = ph_getCookie(phChatCookieName);
 	  return closedChat.length == 0;
   }
-</script>			
+</script>
