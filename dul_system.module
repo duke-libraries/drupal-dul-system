@@ -26,11 +26,14 @@ function dul_system_preprocess_html(&$variables) {
  * the Proactive Chat H3lp widget markup is present
  */
 function dul_system_preprocess_page(&$variables) {
-	// use this hook to add elements at the page level
+	// use this hook to adjust settings of page-level elements
+	// NOTE: use hook_page_build to actually "add" elements to the page
+	// (e.g. page_top, page_bottom, etc)
 }
 
 function dul_system_css_alter(&$css) {
-	dpm($css);
+	// OVERRIDE THIS in the event one needs to 
+	// swap out individual CSS files
 }
 
 /**
