@@ -56,7 +56,7 @@ class XServer {
 		
 		// remove legacy '__'
 		$barcode = str_replace('__', '', $barcode);
-		
+		watchdog('libcatalog.xserver', $barcode);
 		$query = array(
 			'op' => 'ill-item-by-bc',
 			'library' => BIB_PATRON_LIB,
@@ -65,7 +65,8 @@ class XServer {
 		);
 
 		$result = $this->request($query);
-		$item = new XServerItem($result->xml()->x30);
+		watchdog('libcatalog.xserver', print_r($result, TRUE));
+		$item = new XServerItem($result->xml()->z30);
 		return $item;
 	}
 	

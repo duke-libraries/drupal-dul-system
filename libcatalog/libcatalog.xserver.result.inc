@@ -33,7 +33,7 @@ class XServerResult {
 		try {
 			# parsing
 			$this->_xml = new SimpleXMLElement($responseContent);
-			dpm($responseContent);
+			//dpm($responseContent);
 		} catch(Exception $e) {
 			throw new XServerError($e->getMessage());
 		}

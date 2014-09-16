@@ -8,9 +8,10 @@ class XServerItem {
 	public static $CALLNO = 'z30-call-no';
 
 	private $_xml;
-
+	
 	function __construct($xmlElement) {
 		$this->_xml = $xmlElement;
+		watchdog('libcatalog.xserveritem', print_r($xmlElement, TRUE));
 	}
 
 	function getValueForTagName($tagName) {
@@ -30,6 +31,17 @@ class XServerItem {
 				' on line ' . $trace[0]['line'],
 				E_USER_NOTICE);
 		}
+		if ($name == XServerItem::$CALLNO) {
+			$matches = array();
+			if (preg_match('/\$\$h([^\$]+)/', $v, $matches) == 1) {
+				watchdog('libcatalog', print_r($matches, TRUE));
+				$v = $matches[1];
+			}
+		}
 		return $v;
+	}
+	
+	function getXML() {
+		return $this->_xml;
 	}
 }
