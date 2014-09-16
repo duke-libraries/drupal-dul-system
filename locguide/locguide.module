@@ -143,9 +143,22 @@ function locguide_menu() {
 		'type' => MENU_CALLBACK,
 		'access callback' => TRUE,
 	);
+	$items['find/barcode/json'] = array(
+		'page callback' => 'locguide_find_barcode_json',
+		'title' => 'Find Barcode',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,
+	);
 	$items['find/label'] = array(
 		'page callback' => 'locguide_find_label',
 		'title' => 'Find by Label',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,
+	);
+	$items['services/locate-materials'] = array(
+		'page callback' => 'locguide_materials',
+		'title' => 'Locate Materials',
+		'file' => 'locguide.pages.inc',
 		'type' => MENU_CALLBACK,
 		'access callback' => TRUE,
 	);
@@ -337,18 +350,69 @@ function locguide_find_label($label) {
 	return 'Happy';
 }
 
-function locguide_find_barcode($barcode) {
+function locguide_find_barcode_json($barcode=FALSE) {
+	if (empty($barcode)) {
+		// look for it in the POST array
+		$barcode = urldecode($_REQUEST['barcode']);
+	}
+	$callback = check_plain($_REQUEST['callback']);
+	
+	$recordTitle = '';
+	if (isset($_REQUEST['recordTitle'])) {
+		$recordTitle = urldecode($_REQUEST['recordTitle']);
+		watchdog('locguide', $recordTitle);
+	}
+		
 	# emulate the Django project's barcode retrieval
 	# http://dev.library.duke.edu/apps/locationguide/find/HBBQ-7285-00001__
 
 	# create a model for Location Map
 	$model = new LocMapManager();
 	$locMap = $model->getLocationMapByBarcode($barcode);
+	
+	$jsonOutput = new stdClass();
+	
 	if (!is_null($locMap->areaMap)) {
-		dpm($locMap->areaMap);
-		return theme('area-map', array('areaMap' => $locMap->areaMap));
+		$locMap->areaMap->recordTitle = $recordTitle;
+		$jsonOutput = drupal_json_encode($locMap->areaMap);
 	} elseif (!is_null($locMap->externalLink)) {
-		dpm($locMap->externalLink);		
+		$locMap->externalLink->recordTitle = $recordTitle;
+		$jsonOutput = drupal_json_encode($locMap->externalLink);
+	} else {
+		$o = new stdClass();
+		$o->recordTitle = $recordTitle;
+		$jsonOutput = drupal_json_encode(new stdClass());
+	}
+
+	drupal_add_http_header('Content-type', 'application/json');
+	
+	if (isset($callback) && $callback != '') {
+		drupal_add_http_header('Content-type', 'application/javascript');
+		echo sprintf("%s(%s)", $callback, $jsonOutput);
+		
+	} else {
+		echo 'Happy';
+	}
+	#return $jsonOutput;
+}
+
+function locguide_find_barcode($barcode='') {
+	# emulate the Django project's barcode retrieval
+	# http://dev.library.duke.edu/apps/locationguide/find/HBBQ-7285-00001__
+	
+	if (empty($barcode)) {
+		// look for it in the POST array
+		$barcode = $_REQUEST['barcode'];
+	}
+	
+	# create a model for Location Map
+	$model = new LocMapManager();
+	$locMap = $model->getLocationMapByBarcode($barcode);
+	if (!is_null($locMap->areaMap)) {
+
+		return theme('area-map', array('areaMap' => $locMap));
+	} elseif (!is_null($locMap->externalLink)) {
+
 		drupal_set_title($locMap->externalLink->extlink_title);
 		return theme('external-link', array('extLink' => $locMap->externalLink));
 	}

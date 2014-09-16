@@ -3,7 +3,7 @@ include_once('locguide.model.helpers.inc');
 class LocMapManager {
 
 	function locationMaps() {
-		db_set_active('locationguide');
+		db_set_active('django');
 		
 		$query = db_select('locationguide_locationmap', 'lm')->fields('lm');
 		$query->leftJoin('locationguide_collectiongroup', 'cg', 'lm.collection_group_id = cg.id');
@@ -29,6 +29,7 @@ class LocMapManager {
 		$item = $xserver->getItemByBarcode($barcode);
 	
 		$callno = callNumberSortKey($item->{XServerItem::$CALLNO});
+		watchdog('locguide', print_r($item->getXML(), TRUE));
 		//dpm($callno);
 		
 		# query road map
@@ -40,29 +41,36 @@ class LocMapManager {
 		//$query = db_select ('locationguide_collection', 'lc')
 		//	->join('locationguide_collectiongroup', 'lcg', 'lcg.sublibrar')
 		
-		db_set_active('locationguide');
+		db_set_active('django');
 		
 		$query = db_select('locationguide_collectiongroup', 'lcg')
 			->fields('lcg');
 		$query->join('locationguide_collection', 'lc', 'lc.collection_group_id = lcg.id');
 		$query->join('locationguide_locationmap', 'lm', 'lm.collection_group_id = lcg.id');
-		$query->fields('lcg')
+		$query->addField('lcg', 'description', 'collection_group_description');
+		$query->fields('lm')
+			->fields('lc')
 			->condition('lc.code', $item->getValueForTagName(XServerItem::$COLLECTION));
 			
 		$callno_condition = db_or();
 		$callno_condition->condition('lm.callno_range', '');
 		
+		#			$$hPR878.R5$$iB87 2013
+		
 		$callrange_start_end = db_and();
-		$callrange_start_end->condition('lm.callno_range', '<>');
+		$callrange_start_end->condition('lm.callno_range', '', '<>'); 
 		$callrange_start_end->condition('lm.callno_start', $callno, '<=');
 		$callrange_start_end->condition('lm.callno_end', $callno, '>');
 		$callno_condition->condition($callrange_start_end);
+		$query->condition($callno_condition);
 		
+		watchdog('locguide', print_r(array('callno' => $callno), TRUE));
+
 		$result = $query->execute();
 		$o = $result->fetchObject();
 		
 		if ($o == NULL) {
-			
+
 			$query = db_select('locationguide_sublibrary', 's');
 			$query->join('locationguide_locationmap', 'lm', 'lm.id = s.default_locmap_id');
 			$query->fields('s')
@@ -71,8 +79,10 @@ class LocMapManager {
 			try {
 				$result = $query->execute();
 				$o = $result->fetchObject();
+				watchdog('locguide', print_r($o, TRUE));
 			} catch(Exception $x) {
 				error_log($x->getMessage());
+				watchdog('locguide', $x->getMessage(), WATCHDOG_ERROR);
 			}
 		}
 		db_set_active();
@@ -81,11 +91,13 @@ class LocMapManager {
 			return NULL;
 		}
 		$locmap = new LocationMap($o, $this);
+		$locmap->fetch_sublibrary($item->getValueForTagName(XServerItem::$SUBLIBRARY));
+		$locmap->set_callno($item->getValueForTagName(XServerItem::$CALLNO));
 		return $locmap;
 	}
 
 	function getAreaMap($mapId) {
-		$old = db_set_active('locationguide');
+		$old = db_set_active('django');
 
 		$result = db_select('locationguide_areamap', 'm')
 			->fields('m')
@@ -99,10 +111,10 @@ class LocMapManager {
 	}
 	
 	function getExternalLink($externalLinkId) {
-		$old = db_set_active('locationguide');
+		$old = db_set_active('django');
 
 		$query = db_select('locationguide_externallink', 'l');
-		$query->join('locationguide_genericmessage', 'gm', 'gm.id = l.generic_msg_id');
+		$query->leftJoin('locationguide_genericmessage', 'gm', 'gm.id = l.generic_msg_id');
 		$query->condition('l.id', $externalLinkId);
 		$query->addField('l', 'url', 'extlink_url');
 		$query->addField('l', 'title', 'extlink_title');
@@ -127,6 +139,9 @@ class LocationMap {
 	private $_areaMapFetched = FALSE;
 	private $_externalLink = NULL;
 	private $_externalLinkFetched = FALSE;
+	private $_sublibrary = NULL;
+	
+	public $location_description = '';
 	
 	public function __construct($o, $manager) {
 		if (is_a($o, 'stdClass')) {
@@ -139,13 +154,21 @@ class LocationMap {
 	function __get($name) {
 		// lazy load?
 		if ($name == 'areaMap') {
-			error_log('fetching areaMap...');
+			//error_log('fetching areaMap...');
 			if (!$this->_areaMapFetched) {
 				$this->_areaMap = $this->_manager->getAreaMap($this->_o->map_id);
 				$this->_areaMapFetched = TRUE;
 			}
 			if (is_null($this->_areaMap)) {
 				error_log('area map is null');
+			} else {
+				if (!empty($this->_o->collection_group_description)) {
+					$this->_areaMap->collection_group_description = $this->_o->collection_group_description;
+				}
+				$this->_areaMap->type = 'areamap';
+				$this->_areaMap->sublibrary = $this->_sublibrary;
+				$this->_areaMap->callno = $this->_callno;
+				$this->_areaMap->callno_formatted = trim(preg_replace('/\$\$h?/', ' ', $this->_areaMap->callno));
 			}
 			return $this->_areaMap;
 		}
@@ -153,7 +176,11 @@ class LocationMap {
 			error_log('fetching external link');
 			if (!$this->_externalLinkFetched) {
 				$this->_externalLink = $this->_manager->getExternalLink($this->_o->external_link_id);
+				$this->_externalLink->type = "externallink";
 				$this->_externalLinkFetched = TRUE;
+				$this->_externalLink->sublibrary = $this->_sublibrary;
+				$this->_externalLink->callno = $this->_callno;
+				$this->_externalLink->callno_formatted = trim(preg_replace('/\$\$h?/', ' ', $this->_externalLink->callno));
 			}
 			if (is_null($this->_externalLink)) {
 				error_log('externalLink is null');
@@ -162,5 +189,30 @@ class LocationMap {
 		}
 		return NULL;
 	}
-
+	
+	function set_callno($v) {
+		$this->_callno = $v;
+	}
+	
+	function callno() {
+		return $this->_callno;
+	}
+	
+	function sublibrary() {
+		return $this->_sublibrary;
+	}
+	
+	function fetch_sublibrary($sublibrary_code) {
+		if (empty($this->_sublibrary)) {
+			db_set_active('django');
+			$result = db_select('locationguide_sublibrary', 's')
+				->fields('s')
+				->condition('code', $sublibrary_code)
+				->execute();
+				
+			$o = $result->fetchObject();
+			$this->_sublibrary = $o;
+			db_set_active();
+		}
+	}
 }
