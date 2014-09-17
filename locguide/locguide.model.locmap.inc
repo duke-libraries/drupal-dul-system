@@ -55,11 +55,14 @@ class LocMapManager {
 		$link_url_map = function($o) {
 			if (empty($o->url)) {
 				$o->url = sprintf('services/locationguide/areamap/%s', $o->areamap_id);
+				return;
 			}
+			$o->url = str_replace('apps/', 'services/', $o->url);
 		};
 		array_map($link_text_map, $return['stacks_locmaps']);
 		array_map($link_text_map, $return['other_locmaps']);
 		array_map($link_url_map, $return['stacks_locmaps']);
+		array_map($link_url_map, $return['other_locmaps']);
 		#dpm($return);
 		return $return;
 	}
@@ -116,8 +119,6 @@ class LocMapManager {
 			
 		$callno_condition = db_or();
 		$callno_condition->condition('lm.callno_range', '');
-		
-		#			$$hPR878.R5$$iB87 2013
 		
 		$callrange_start_end = db_and();
 		$callrange_start_end->condition('lm.callno_range', '', '<>'); 
