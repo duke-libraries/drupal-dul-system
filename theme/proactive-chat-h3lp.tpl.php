@@ -10,7 +10,7 @@ with your real queue name and 9999 with your desired Widget ID number. -->
 
 
 	<!-- Markup for Bootstrap-modal dialog -->
-	<p id="ph_popover">
+	<!--p id="ph_popover">
   	<p class="proactiveHelpPrompt" style="text-align:center; font-size:1.3em;">Can we help you?</p>
   	<p>
   		<a id="proactiveChatUserTrigger" href="#">
@@ -20,7 +20,7 @@ with your real queue name and 9999 with your desired Widget ID number. -->
     	</a>
     </p>
     <p>No Thanks</p>		
-	</p>
+	</p-->
 	<div id="ph_modal" class="dialog modal hide fade" tabindex="1" role="dialog" aria-labelledby="phModalLabel" aria-hidden="true">
 		<div class="modal-header">
 			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
