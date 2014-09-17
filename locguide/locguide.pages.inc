@@ -41,7 +41,7 @@ function locguide_materials() {
 			$path = sprintf("services/locationguide/areamap/%s", $o->areamap_id);
 			$row[] = l(t('@label - @area', array('@label' => $o->sublibrary_label, '@area' => $o->area)), $path);
 		} else {
-			$row[] = l($o->external_link_text, $o->external_link_url);
+			$row[] = l($o->external_link_text, str_replace('apps', 'services', $o->external_link_url));
 		}
 		$rows[] = $row;
 	}
@@ -65,5 +65,17 @@ function locguide_materials() {
 		),
 	);
 	
+	return $page;
+}
+
+function locguide_materials_perkins() {
+	$perkins_locmaps = LocMapManager::perkins_locationmaps();
+	$page['perkins'] = array(
+		'#theme' => 'locationguide-perkins',
+		'#stacks_locmaps' => $perkins_locmaps['stacks_locmaps'],
+		'#other_locmaps' => $perkins_locmaps['other_locmaps'],
+		'#stacks_table_title' => variable_get('locguide.perkins_stacks_title'),
+		'#other_table_title' => variable_get('locguide.other_stacks_title'),
+	);
 	return $page;
 }

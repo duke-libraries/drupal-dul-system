@@ -1,5 +1,38 @@
 <?php
 
+function locguide_admin_settings_form($form, &$form_state) {
+	$form['locate-materials'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Locate Materials'),
+		'#description' => t('Settings for the <em>Locate Materials</em> page'),
+		'#collapsible' => TRUE,
+		'#collapsed' => FALSE,
+	);
+	$form['locate-materials']['perkins-stacks-title'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Title for the Perkins Stacks Table'),
+		'#default_value' => variable_get('locguide.perkins_stacks_title', 'Perkins and Bostock Stacks'),
+	);
+	$form['locate-materials']['other-stacks-title'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Title for the Other Stacks Table'),
+		'#default_value' => variable_get('locguide.other_stacks_title', 'Other Locations in Perkins and Bostock Libraries'),
+	);
+	$form['actions'] = array(
+		'#type' => 'actions',
+	);
+	$form['actions']['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Submit'),
+	);
+	return $form;
+}
+
+function locguide_admin_settings_form_submit($form, &$form_state) {
+	variable_set('locguide.perkins_stacks_title', $form_state['values']['perkins-stacks-title']);
+	variable_set('locguide.other_stacks_title', $form_state['values']['other-stacks-title']);
+}
+
 function locguide_admin_areamaps() {
 	db_set_active('django');
 

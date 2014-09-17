@@ -7,5 +7,5 @@
 ?>
 
 <div class="areamap-image">
-	<img src="http://dev.library.duke.edu/apps/media/<?php print $areaMap->image; ?>"/>
+	<img src="http://library.duke.edu/apps/media/<?php print $areaMap->image; ?>"/>
 </div>

@@ -2,6 +2,68 @@
 include_once('locguide.model.helpers.inc');
 class LocMapManager {
 
+	public static function perkins_locationmaps() {
+		/* source SQL
+		SELECT * FROM `locationguide_collectiongroup` g
+		JOIN `locationguide_sublibrary` s on s.id = g.sublibrary_id
+		LEFT OUTER JOIN `locationguide_locationmap` m on m.collection_group_id = g.id
+		WHERE s.code = 'PERKN'
+		*/
+		db_set_active('django');
+		$query = db_select('locationguide_collectiongroup', 'g');
+		$query->join('locationguide_sublibrary', 's', 's.id = g.sublibrary_id');
+		$query->leftJoin('locationguide_locationmap', 'm', 'm.collection_group_id = g.id');
+		$query->leftJoin('locationguide_externallink', 'l', 'l.id = m.external_link_id');
+		$query->leftJoin('locationguide_genericmessage', 'msg', 'msg.id = l.generic_msg_id');
+		$query->leftJoin('locationguide_areamap', 'a', 'a.id = m.map_id');
+		$query->addField('g', 'id', 'collgroup_id');
+		$query->addField('m', 'id', 'locmap_id');
+		$query->addField('a', 'id', 'areamap_id');
+		$query->addField('msg', 'label', 'generic_msg_label');
+		$query->addField('msg', 'content', 'generic_msg_content');
+		$query->fields('g')
+			->fields('l')
+			->fields('m')
+			->fields('s')
+			->fields('a')
+			->condition('s.code', 'PERKN')
+			->orderBy('description');
+		$result = $query->execute();
+		
+		$objs = $result->fetchAll();
+		db_set_active();
+		
+		$stacks_locmaps = array();
+		$other_locmaps = array();
+		$stack_filter = function($o) {
+			return preg_match('/^Stacks/', $o->description) == 1;
+		};
+		$stack_locmaps = array_filter($objs, $stack_filter);
+		$others_filter = function($o) {
+			return !empty($o->description);
+		};
+		$other_locmaps = array_filter($objs, $others_filter);
+		$return = array(
+			'stacks_locmaps' => $stack_locmaps,
+			'other_locmaps' => $other_locmaps
+		);
+		$link_text_map = function($o) {
+			if (empty($o->link_text)) {
+				$o->link_text = sprintf("%s - %s", $o->building, $o->area);
+			}
+		};
+		$link_url_map = function($o) {
+			if (empty($o->url)) {
+				$o->url = sprintf('services/locationguide/areamap/%s', $o->areamap_id);
+			}
+		};
+		array_map($link_text_map, $return['stacks_locmaps']);
+		array_map($link_text_map, $return['other_locmaps']);
+		array_map($link_url_map, $return['stacks_locmaps']);
+		#dpm($return);
+		return $return;
+	}
+	
 	function locationMaps() {
 		db_set_active('django');
 		

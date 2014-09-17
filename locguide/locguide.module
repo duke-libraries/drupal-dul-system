@@ -14,6 +14,15 @@ function locguide_menu() {
 		'file' => 'system.admin.inc',
 		'file path' => drupal_get_path('module', 'system'),
 	);
+	$items['admin/config/locguide/settings'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('locguide_admin_settings_form'),
+		'file' => 'locguide.admin.inc',
+		'title' => 'Location Guide Settings',
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_NORMAL_ITEM,
+		'weight' => -10,
+	);
 	$items['admin/config/locguide/areamap'] = array(
 		'page callback' => 'locguide_admin_areamaps',
 		'file' => 'locguide.admin.inc',
@@ -129,10 +138,16 @@ function locguide_menu() {
 		'file' => 'locguide.genericmessage.admin.inc',
 		'access arguments' => array('administer site configuration'),
 	);
-
 	$items['services/locationguide'] = array(
 		'page callback' => 'locguide_materials',
 		'title' => 'Locate Materials',
+		'file' => 'locguide.pages.inc',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,
+	);
+	$items['services/locationguide/perkins'] = array(
+		'page callback' => 'locguide_materials_perkins',
+		'title' => 'Book Locations in Perkins and Bostock Libraries',
 		'file' => 'locguide.pages.inc',
 		'type' => MENU_CALLBACK,
 		'access callback' => TRUE,
@@ -237,6 +252,11 @@ function locguide_theme($existing, $type, $theme, $path) {
 	$items['external-link'] = array(
 		'template' => 'external-link',
 		'variables' => array('extLink' => NULL),
+		'path' => $path . '/theme',
+	);
+	$items['locationguide-perkins'] = array(
+		'template' => 'locationguide-perkins',
+		'variables' => array('stacks_locmaps' => NULL, 'other_locmaps' => NULL, 'stacks_table_title' => NULL, 'other_table_title' => NULL),
 		'path' => $path . '/theme',
 	);
 	return $items;
