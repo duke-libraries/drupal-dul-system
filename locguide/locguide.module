@@ -130,10 +130,25 @@ function locguide_menu() {
 		'access arguments' => array('administer site configuration'),
 	);
 
-	$items['areamap/%locguide_areamap'] = array(
+	$items['services/locationguide'] = array(
+		'page callback' => 'locguide_materials',
+		'title' => 'Locate Materials',
+		'file' => 'locguide.pages.inc',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,
+	);
+	$items['services/locationguide/areamap'] = array(
+		'page callback' => 'locguide_materials',
+		'access callback' => FALSE,
+		'title' => 'Maps',
+		'type' => MENU_CALLBACK,
+	);
+	$items['services/locationguide/areamap/%locguide_areamap'] = array(
 		'type' => MENU_CALLBACK,
 		'page callback' => 'locguide_areamap',
-		'page arguments' => array(1),
+		'page arguments' => array(3),
+		'title callback' => 'locguide_areamap_title',
+		'title arguments' => array(3),
 		'file' => 'locguide.pages.areamap.inc',
 		'access callback' => TRUE,
 	);
@@ -152,13 +167,6 @@ function locguide_menu() {
 	$items['find/label'] = array(
 		'page callback' => 'locguide_find_label',
 		'title' => 'Find by Label',
-		'type' => MENU_CALLBACK,
-		'access callback' => TRUE,
-	);
-	$items['services/locate-materials'] = array(
-		'page callback' => 'locguide_materials',
-		'title' => 'Locate Materials',
-		'file' => 'locguide.pages.inc',
 		'type' => MENU_CALLBACK,
 		'access callback' => TRUE,
 	);
@@ -277,6 +285,16 @@ function locguide_areamap_load($areamap_id) {
 
 	db_set_active();
 	return $o;
+}
+
+/**
+ * Title callback for areamap
+ */
+function locguide_areamap_title($areamap) {
+	if (empty($areamap->building) && empty($areamap->area)) {
+		return 'Area Map';
+	}
+	return sprintf("Map of %s - %s", $areamap->building, $areamap->area);
 }
 
 /**

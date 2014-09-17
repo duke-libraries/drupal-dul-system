@@ -18,6 +18,7 @@ function locguide_materials() {
 	$query->addField('l', 'link_text', 'external_link_text');
 	$query->addField('a', 'area');
 	$query->addField('a', 'building');
+	$query->addField('a', 'id', 'areamap_id');
 	$query->condition('s.collgroup_choice', '1')
 		->condition('m.collection_group_id', 'NULL', '<>');
 	$query->orderBy('s.label');
@@ -37,7 +38,8 @@ function locguide_materials() {
 	foreach ($objs as $o) {
 		$row = array($o->sublibrary_label);
 		if (empty($o->external_link_text)) {
-			$row[] = l(t('@label - @area', array('@label' => $o->sublibrary_label, '@area' => $o->area)), $o->external_link_url);
+			$path = sprintf("services/locationguide/areamap/%s", $o->areamap_id);
+			$row[] = l(t('@label - @area', array('@label' => $o->sublibrary_label, '@area' => $o->area)), $path);
 		} else {
 			$row[] = l($o->external_link_text, $o->external_link_url);
 		}
