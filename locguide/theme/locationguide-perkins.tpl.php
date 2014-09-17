@@ -41,7 +41,7 @@
 					<?php else: ?>
 						<?php if (!empty($locmap->generic_msg_id)): ?>
 							<?php print $locmap->generic_msg_label; ?>&nbsp;
-							(<?php print l(t(($generic_msg_id == 11) ? 'tutorial' : 'map'), $locmap->url); ?>)
+							(<?php print l(t(($locmap->generic_msg_id == 11) ? 'tutorial' : 'map'), $locmap->url); ?>)
 						<?php else: ?>
 							<?php print l(t($locmap->link_text), $locmap->url); ?>
 						<?php endif; ?>
