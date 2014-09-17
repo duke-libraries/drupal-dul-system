@@ -3,7 +3,7 @@ include_once('locguide.model.helpers.inc');
 
 class CollectionGroupManager {
 	public static function collectionGroups($filter=NULL, $usePager=FALSE, $defaultLimit=25) {
-		db_set_active('locationguide');
+		db_set_active('django');
 		
 		$query = db_select('locationguide_collectiongroup', 'cg')->fields('cg');
 		if ($usePager) {

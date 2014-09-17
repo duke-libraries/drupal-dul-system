@@ -5,7 +5,7 @@
  */
 function locguide_admin_genericmessages() {
 	
-	db_set_active('locationguide');
+	db_set_active('django');
 	$query = db_select('locationguide_genericmessage', 'm')->extend('PagerDefault')->limit(15);
 	$query->fields('m');
 	$query->orderBy('m.label');

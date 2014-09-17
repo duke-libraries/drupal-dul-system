@@ -204,7 +204,7 @@ function _locguide_load_content_types() {
 			$content_type_data = $cache->data;
 		} else {
 			$content_type_data = array();
-			db_set_active('locationguide');
+			db_set_active('django');
 			
 			$result = db_select('django_content_type', 'ct')
 				->fields('ct')
@@ -274,7 +274,7 @@ function locguide_admin_model_data($context) {
  * Auto-loader for Area Map
  */
 function locguide_areamap_load($areamap_id) {
-	db_set_active('locationguide');
+	db_set_active('django');
 	$query = db_select('locationguide_areamap', 'am')
 		->fields('am')
 		->condition('am.id', $areamap_id);
@@ -301,7 +301,7 @@ function locguide_areamap_title($areamap) {
  * Auto-loader for Collection Group
  */
 function locguide_collgroup_load($id) {
-	db_set_active('locationguide');
+	db_set_active('django');
 	$query = db_select('locationguide_collectiongroup', 'cg')
 		->fields('cg')
 		->condition('cg.id', $id);
@@ -315,7 +315,7 @@ function locguide_collgroup_load($id) {
  * Auto-loader for Sublibrary
  */
 function locguide_sublibrary_load($id) {
-	db_set_active('locationguide');
+	db_set_active('django');
 	$query = db_select('locationguide_sublibrary', 'sl')
 		->fields('sl')
 		->condition('sl.id', $id);
@@ -329,7 +329,7 @@ function locguide_sublibrary_load($id) {
  * Auto-loader for Generic Message
  */
 function locguide_genericmessage_load($id) {
-	db_set_active('locationguide');
+	db_set_active('django');
 	$query = db_select('locationguide_genericmessage', 'm')
 		->fields('m')
 		->condition('m.id', $id);
@@ -353,7 +353,7 @@ function locguide_genericmessage_load($id) {
  * Auto-loader for Generic Message
  */
 function locguide_externallink_load($id) {
-	db_set_active('locationguide');
+	db_set_active('django');
 	$query = db_select('locationguide_externallink', 'm')
 		->fields('m')
 		->condition('m.id', $id);

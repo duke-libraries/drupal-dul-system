@@ -1,7 +1,7 @@
 <?php
 
 function locguide_admin_areamaps() {
-	db_set_active('locationguide');
+	db_set_active('django');
 
 	$areamaps = array();
 

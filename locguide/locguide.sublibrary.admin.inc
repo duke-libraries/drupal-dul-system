@@ -5,7 +5,7 @@
  */
 function locguide_admin_sublibraries() {
 	
-	db_set_active('locationguide');
+	db_set_active('django');
 	$query = db_select('locationguide_sublibrary', 'sl')->extend('PagerDefault')->limit(15);
 	$query->fields('sl');
 	$query->orderBy('sl.label');
@@ -107,7 +107,7 @@ function locguide_admin_sublibrary_form($form, &$form_state, $sublibrary, $model
 
 function locguide_admin_sublibrary_form_submit($form, &$form_state) {
 	if ($form_state['values']['op'] == 'Submit') {
-		db_set_active('locationguide');
+		db_set_active('django');
 		$query = db_merge('locationguide_sublibrary')
 			->key(array('id' => $form_state['values']['sublibrary_id']))
 			->fields(array(

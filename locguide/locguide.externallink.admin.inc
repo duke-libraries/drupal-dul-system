@@ -5,7 +5,7 @@
  */
 function locguide_admin_externallinks() {
 	
-	db_set_active('locationguide');
+	db_set_active('django');
 	$query = db_select('locationguide_externallink', 'l')->extend('PagerDefault')->limit(15);
 	$query->fields('l');
 	$query->leftJoin('locationguide_genericmessage', 'm', 'm.id = l.generic_msg_id');
@@ -148,7 +148,7 @@ function locguide_admin_externallink_form_submit($form, &$form_state) {
 	if ($form_state['values']['op'] == 'Submit') {
 		// save changes
 		dpm($form_state);
-		db_set_active('locationguide');
+		db_set_active('django');
 		
 		$query = db_merge('locationguide_externallink')
 			->key(array('id' => $form_state['values']['externallink_id']))

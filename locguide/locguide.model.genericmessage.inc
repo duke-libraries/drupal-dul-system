@@ -4,7 +4,7 @@ include_once('locguide.model.helpers.inc');
 class GenericMessage {
 	
 	public static function genericMessages() {
-		db_set_active('locationguide');
+		db_set_active('django');
 		$query = db_select('locationguide_genericmessage', 'm')->fields('m');
 		$genericmessages = array();
 		try {

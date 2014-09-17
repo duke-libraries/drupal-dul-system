@@ -7,7 +7,7 @@
 function locguide_admin_collgroups() {
 	//$collgroups = CollectionGroupManager::collectionGroups(NULL, TRUE);
 	
-	db_set_active('locationguide');
+	db_set_active('django');
 	$query = db_select('locationguide_collectiongroup', 'cg')->extend('PagerDefault')->limit(15);
 	$query->fields('cg');
 	$query->leftJoin('locationguide_sublibrary', 'sl', 'sl.id = cg.sublibrary_id');
@@ -94,7 +94,7 @@ function locguide_admin_collgroup_form($form, &$form_state, $collgroup, $model) 
 function locguide_admin_collgroup_form_submit($form, &$form_state) {
 	if ($form_state['values']['op'] == 'Submit') {
 		// save record
-		db_set_active('locationguide');
+		db_set_active('django');
 		$query = db_merge('locationguide_collectiongroup')
 			->key(array('id' => $form_state['values']['collgroup_id']))
 			->fields(array(
