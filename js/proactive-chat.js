@@ -7,19 +7,6 @@
 			// wire up the Proactive Chat H3lp
 			//
 
-			/*
-			$( 'window' ).popover({
-				html : true,
-				placement : 'bottom',
-				content : function() {
-					return $('#ph_popover').html();
-				},
-				trigger : 'manual',
-				title : 'Test',
-			});
-			$( 'window' ).popover('show');
-			*/
-			
 		  // TODO - put this in "Institution Skin" specific JS file
 		  $( '#proactiveChatUserTrigger' ).click(function(evt) {
 		  	$( '.dialog').modal('hide');
@@ -46,15 +33,11 @@
 	    	if (dialog.length > 0 && ph_patronDidNotOpenChat()) {
 	    		dialog
 	    			.on('shown', function() {
-	    				$(document)
-	    					.off('focusin.modal')
-	    					.on('focusin.modal', function(e) {
-	    						$(e.target).focus();
-	    					})
+	    				$(document).off('focusin.modal');
 	    				ph_setCookie(phChatCookieName, "opened", 1);
 	    			})
 	    			.on('hidden', function() {
-	    			_gaq.push(['_trackEvent', 'Close', 'ProactiveChat', 'Catalog']);
+	    				_gaq.push(['_trackEvent', 'Close', 'ProactiveChat', 'Catalog']);
 	    		}).modal({backdrop: false}).modal('show');
 	    		
 	    		/*
@@ -84,10 +67,10 @@
 	    		});
 	    		*/
 	    	} else {
-	    		setTimeout(showDialog, 15000);
+	    		setTimeout(showDialog, 10000);
 	    	}
 	    }
-    	setTimeout(showDialog, 15000);
+    	setTimeout(showDialog, 10000);
 		}
 	}
 })(jQuery);
