@@ -43,7 +43,7 @@
 	
 	    	// TODO check for the cookie that indicated the patron
 	    	// closed the chat dialog in a previous visit.
-	    	if (dialog.length > 0 && ph_patronDidNotOpenChat()) {
+	    	if (dialog.length >= 0 && ph_patronDidNotOpenChat()) {
 	    		dialog
 	    			.on('shown', function() {
 	    				$(document).off('focusin.modal')	
