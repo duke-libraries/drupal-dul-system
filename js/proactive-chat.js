@@ -46,7 +46,11 @@
 	    	if (dialog.length > 0 && ph_patronDidNotOpenChat()) {
 	    		dialog
 	    			.on('shown', function() {
-	    				$(document).off('focusin.modal')	
+	    				$(document)
+	    					.off('focusin.modal')
+	    					.on('focusin.modal', function(e) {
+	    						$(e.target).focus();
+	    					})
 	    				ph_setCookie(phChatCookieName, "opened", 1);
 	    			})
 	    			.on('hidden', function() {
