@@ -39,10 +39,10 @@
 	    				ga('send', 'event', { eventCategory: 'Catalog', eventLabel: 'ProactiveChat', eventAction: 'close'});
 	    		}).modal({backdrop: false}).modal('show');
 	    	} else {
-	    		setTimeout(showDialog, 10000);
+	    		setTimeout(showDialog, 15000);
 	    	}
 	    }
-    	setTimeout(showDialog, 10000);
+    	setTimeout(showDialog, 15000);
 		}
 	}
 })(jQuery);
