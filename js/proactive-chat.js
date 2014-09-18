@@ -45,9 +45,15 @@
 	    	// closed the chat dialog in a previous visit.
 	    	if (dialog.length > 0 && ph_patronDidNotOpenChat()) {
 	    		dialog
+	    			.on('show', function() {
+	    				// remove the modal event handler initially 
+	    				// added by Bootstrap
+	    				$(document).off('focusin.modal')	
+	    			})
 	    			.on('shown', function() {
 	    				ph_setCookie(phChatCookieName, "opened", 1);
-	    		}).on('hidden', function() {
+	    			})
+	    			.on('hidden', function() {
 	    			_gaq.push(['_trackEvent', 'Close', 'ProactiveChat', 'Catalog']);
 	    		}).modal({backdrop: false}).modal('show');
 	    		
