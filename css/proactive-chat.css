@@ -27,8 +27,20 @@ p.proactiveHelpPrompt {
 	color: #0062a0;
 }
 
-.modal, .modal.fade.in {
+/*
+ This overrides the default "bootstrap" modal CSS rules, 
+ such that the 'Proactive Chat' popup appears at the 
+ bottom right portion of the browser window.
+ ---
+ Currently works in Chrome, 
+*/
+#ph_modal {
+	width: 360px !important;
 	top: auto !important;
+	left: auto !important;
 	bottom: 5%;
 	right: 5%;
+}
+#ph_modal .modal-footer {
+	padding: 10px 15px;
 }
