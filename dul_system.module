@@ -222,7 +222,14 @@ function dul_system_theme($existing, $type, $theme, $path) {
 			'template' => 'proactive-chat-h3lp',
 			'path' => $path . '/theme',
 			'variables' => array(),
-		)
+		),
+		
+		'springbreak-2015-maint' => array(
+			'template' => 'springbreak-2015-maint',
+			'path' => $path . '/theme',
+			'variables' => array(),
+		),
+		
 	);
 }
 
@@ -322,6 +329,10 @@ function dul_system_block_info() {
 		'info' => t('Twitter Widget for Data and GIS'),
 		'cache' => DRUPAL_NO_CACHE,
 	);
+	$blocks['springbreak-2015-maint'] = array(
+		'info' => t('Spring Break 2015 Maintenance'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
 
 	return $blocks;
 }
@@ -347,6 +358,16 @@ function dul_system_block_view($delta) {
 			
 		case 'twitter-datagis':
 			$block['content'] = theme('twitter-datagis', array());
+			break;
+			
+		case 'springbreak-2015-maint':
+			$now = time();
+			$banner_start = mktime(8, 0, 0, 3, 5, 2015);
+			$banner_end = mktime(11, 0, 0, 3, 11, 2015);
+			$block['content'] = '';
+			if (($banner_start <= $now) && ($now <= $banner_end)) {
+				$block['content'] = theme('springbreak-2015-maint', array());
+			}
 			break;
 	}
 
