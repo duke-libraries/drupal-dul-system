@@ -277,7 +277,18 @@ function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
 		array(':netid' => $potential_netid));
 	
 	watchdog('dul_staff', sprintf("potential netid for %s is %s", $form_state['user']->name, $potential_netid));
-	dpm($form_state['user']);
+	#dpm($form);
+	// alter the 'description' text of the Picture Upload
+	// field to notify DUL staff that
+	// this upload does NOT propagate to the staff directory
+	if (isset($form['picture']['picture_upload'])) {
+		$current_description = $form['picture']['picture_upload']['#description'];
+
+		$form['picture']['picture_upload']['#description'] = 
+			sprintf("<p>%s<br /><em>Note:</em> This picture does not appear in the Library Staff Directory.</p>", $current_description);
+	}
+		
+	#dpm($form_state['user']);
 		
 	$person = $result->fetchObject();	
 	db_set_active();
