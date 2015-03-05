@@ -1,4 +1,5 @@
 <div class="alert alert-mild alert-dismissable">
+<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
 <h3>Scheduled Outage for Library Website</h3>
 <p>The Duke Libraries website will be down for scheduled maintenance between 9:30 a.m. and 10:30 a.m. on Wednesday, March 11.  
 	During that time, you will be able to go directly to 
