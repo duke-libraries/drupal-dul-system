@@ -362,7 +362,7 @@ function dul_system_block_view($delta) {
 			
 		case 'springbreak-2015-maint':
 			$now = time();
-			$banner_start = mktime(8, 0, 0, 3, 5, 2015);
+			$banner_start = mktime(8, 0, 0, 2, 5, 2015);
 			$banner_end = mktime(11, 0, 0, 3, 11, 2015);
 			$block['content'] = '';
 			if (($banner_start <= $now) && ($now <= $banner_end)) {
