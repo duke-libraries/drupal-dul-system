@@ -48,7 +48,7 @@ function dul_staff_person(stdClass $person, $selector=NULL) {
 	# staff member, re-hired with a different (new) staff entry in 
 	# the 'Django' tables (because we haven't done a cleanup -- UGH!!)
 	# return MENU_NOT_FOUND in that case
-	if (!isset($person->dislay_name)) {
+	if (!isset($person->display_name)) {
 		return MENU_NOT_FOUND;
 	}
 
