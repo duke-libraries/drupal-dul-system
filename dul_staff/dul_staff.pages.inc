@@ -43,6 +43,15 @@ function dul_staff_dept_overview() {
  */
 function dul_staff_person(stdClass $person, $selector=NULL) {
 	global $user;
+
+	# on occasion, the record could represent a former
+	# staff member, re-hired with a different (new) staff entry in 
+	# the 'Django' tables (because we haven't done a cleanup -- UGH!!)
+	# return MENU_NOT_FOUND in that case
+	if (!isset($person->dislay_name)) {
+		return MENU_NOT_FOUND;
+	}
+
 	if ($selector == 'title') {
 		return $person->display_name;
 	}
