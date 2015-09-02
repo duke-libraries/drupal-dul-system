@@ -370,7 +370,7 @@ function dul_staff_person_load($person_id) {
 		array(':person_id' => $person_id, ':netid' => $person_id));
 		
 	$person = $result->fetchObject();
-	
+
 	if (!is_null($person)) {
 		// load department names
 		$person->depts = array();
