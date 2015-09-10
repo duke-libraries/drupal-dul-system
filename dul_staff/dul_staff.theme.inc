@@ -25,7 +25,7 @@ function theme_staff_directory($variables) {
 		t('DEPARTMENTS'),
 		t('TELEPHONE'),
 		t('LOCATION'),
-		t('DIRECTOR/HEAD'),
+		t('DIRECTOR/HEAD/COORDINATOR'),
 	);
 	
 	extract($variables);
