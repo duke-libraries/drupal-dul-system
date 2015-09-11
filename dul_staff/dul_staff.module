@@ -674,7 +674,11 @@ function dul_staff_directory_tree() {
 			$directory_tree['top_dept'] = $top_dept;
 			$directory_tree['reporting_depts'] = $reporting_depts;
 			db_set_active();
-			cache_set('staff_directory_tree', $directory_tree, 'cache');
+
+			// Small tweak to have the 'staff_directory_tree' cache expire
+			// (as opposed to being permanent)
+			// so the cache will clear on a regular basis.
+			cache_set('staff_directory_tree', $directory_tree, 'cache', CACHE_TEMPORARY);
 		}
 	}
 	return $directory_tree;
