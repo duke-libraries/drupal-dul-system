@@ -165,7 +165,7 @@ function dul_staff_dept(stdClass $dept, $selector=NULL) {
 		$row[] = array('data' => !(empty($member->preferred_title)) ? $member->preferred_title : $member->title, 'width' => '42%');
 		$row[] = $member->phone;
 		$row[] = ($member->email_privacy != '1') ? 
-			l('<i class="icon-envelope"></i>', 'mailto:' . $member->email, 
+			l('<i class="fa fa-envelope" aria-hidden="true"></i>', 'mailto:' . $member->email, 
 				array(
 					'attributes' => array('class' => array('btn','btn-small')),
 					'html' => TRUE,
