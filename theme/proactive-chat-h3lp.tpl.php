@@ -10,23 +10,27 @@ with your real queue name and 9999 with your desired Widget ID number. -->
 
 
 	<!-- Markup for Bootstrap-modal dialog -->
-	<div id="ph_modal" class="dialog modal hide fade" tabindex="1" role="dialog" aria-labelledby="phModalLabel" aria-hidden="true">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
-			<h3 id="phModalLabel">Duke University Libraries</h3>
-		</div>
-		<div class="modal-body">
-	  	<p class="proactiveHelpPrompt" style="text-align:center; font-size:1.3em;">Can we help you?</p>
-	  	<a id="proactiveChatUserTrigger" href="#">
-	  		<img style="margin-left:auto; margin-right:auto; display:block;" 
-	  				 border="0" alt="We're online, click to chat" 
-	  				 src="http://library.duke.edu/static/librarycatalog/images/chat-now3.png"/>
-	    </a>		
-		</div>
-		<div class="modal-footer text-center">
-			<button class="btn" data-dismiss="modal" aria-hidden="true">No Thanks</button>
-		</div>
-	</div>	
+	<div id="ph_modal" class="dialog modal fade" tabindex="1" role="dialog" aria-labelledby="phModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-sm" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+					<h3 id="phModalLabel">Duke University Libraries</h3>
+				</div>
+				<div class="modal-body">
+					<p class="proactiveHelpPrompt" style="text-align:center; font-size:1.3em;">Can we help you?</p>
+					<a id="proactiveChatUserTrigger" href="#">
+						<img style="margin-left:auto; margin-right:auto; display:block;" 
+								 border="0" alt="We're online, click to chat" 
+								 src="http://library.duke.edu/static/librarycatalog/images/chat-now3.png"/>
+					</a>		
+				</div>
+				<div class="modal-footer text-center">
+					<button class="btn" data-dismiss="modal" aria-hidden="true">No Thanks</button>
+				</div>
+			</div><!-- .modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
 
   <!--div class="dialog" style="display: none; background-color:#F8F8F8;">
   	<p class="proactiveHelpPrompt" style="text-align:center; font-size:1.3em;">Can we help you?</p>
