@@ -132,9 +132,16 @@ function dul_staff_page2($dept) {
  */
 function dul_staff_dept(stdClass $dept, $selector=NULL) {
 	if ($selector == 'title') {
+		if ($dept === FALSE || $dept == NULL) {
+			return '';
+		}
 		return $dept->name;
 	}
 
+	if ($dept === FALSE || $dept == NULL) {
+		return MENU_NOT_FOUND;
+	}
+	
 	drupal_set_title($dept->name);
 
 	$page = array();

@@ -31,11 +31,11 @@
 	    	// closed the chat dialog in a previous visit.
 	    	if (dialog.length > 0 && ph_patronDidNotOpenChat()) {
 	    		dialog
-	    			.on('shown', function() {
+	    			.on('shown.bs.modal', function() {
 	    				$(document).off('focusin.modal');
 	    				ph_setCookie(phChatCookieName, "opened", 1);
 	    			})
-	    			.on('hidden', function() {
+	    			.on('hidden.bs.modal', function() {
 	    				ga('send', 'event', { eventCategory: 'Catalog', eventLabel: 'ProactiveChat', eventAction: 'close'});
 	    		}).modal({backdrop: false}).modal('show');
 	    	} else {

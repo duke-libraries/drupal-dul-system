@@ -471,6 +471,15 @@ function dul_staff_dept_load($dept_id) {
 	$res = $q->execute();
 	
 	$dept = $res->fetchObject();
+	if ($dept === FALSE) {
+		db_set_active();
+		return FALSE;
+	}
+
+	error_log("***********");
+	error_log(print_r($dept, TRUE));
+	error_log("***********");
+
 	// TODO put in one central location (or adapt Entity framework)
 	$phys_address = explode('$', $dept->physical_address);
 	try {
