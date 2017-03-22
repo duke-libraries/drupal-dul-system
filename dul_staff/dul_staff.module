@@ -161,7 +161,7 @@ function dul_staff_search_execute($keys) {
 	$db_or = db_or();
 	foreach ($slugs as $slug) {
 		$slug .= '*';
-		$db_or->where('MATCH (last_name, first_name, preferred_title, title) AGAINST (:slug IN BOOLEAN MODE)', array(':slug' => $slug));
+		$db_or->where('MATCH (last_name, first_name, preferred_title, title, nickname) AGAINST (:slug IN BOOLEAN MODE)', array(':slug' => $slug));
 	}
 	$staff_query->condition($db_or);
 	$staff_result = $staff_query->execute();
