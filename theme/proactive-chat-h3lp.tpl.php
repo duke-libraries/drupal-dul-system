@@ -20,10 +20,10 @@ with your real queue name and 9999 with your desired Widget ID number. -->
 				<div class="modal-body">
 					<p class="proactiveHelpPrompt" style="text-align:center; font-size:1.3em;">Can we help you?</p>
 					<a id="proactiveChatUserTrigger" href="#">
-						<img style="margin-left:auto; margin-right:auto; display:block;" 
-								 border="0" alt="We're online, click to chat" 
-								 src="http://library.duke.edu/static/librarycatalog/images/chat-now3.png"/>
-					</a>		
+						<img style="margin-left:auto; margin-right:auto; display:block;"
+								 border="0" alt="We're online, click to chat"
+								 src="https://library.duke.edu/static/librarycatalog/images/chat-now3.png"/>
+					</a>
 				</div>
 				<div class="modal-footer text-center">
 					<button class="btn" data-dismiss="modal" aria-hidden="true">No Thanks</button>
@@ -35,8 +35,8 @@ with your real queue name and 9999 with your desired Widget ID number. -->
   <!--div class="dialog" style="display: none; background-color:#F8F8F8;">
   	<p class="proactiveHelpPrompt" style="text-align:center; font-size:1.3em;">Can we help you?</p>
   	<a id="proactiveChatUserTrigger" href="#">
-  		<img style="margin-left:auto; margin-right:auto; display:block;" border="0" alt="We're online, click to chat" 
-  			 src="http://library.duke.edu/static/librarycatalog/images/chat-now3.png"/>
+  		<img style="margin-left:auto; margin-right:auto; display:block;" border="0" alt="We're online, click to chat"
+  			 src="https://library.duke.edu/static/librarycatalog/images/chat-now3.png"/>
     </a>
   </div-->
 
@@ -79,7 +79,7 @@ var y = document.getElementsByTagName("script")[0]; y.parentNode.insertBefore(x,
 	  }
 	  return "";
   }
-  
+
   // TODO put this in institution-skin based file
   var phChatCookieName = "ph_opened";
   function ph_patronDidNotOpenChat() {
