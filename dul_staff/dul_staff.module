@@ -303,6 +303,12 @@ function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
 			'#collapsed' => TRUE,
 			'#weight' => 2,
 		);
+		$form['staff_data']['preferred_title'] = array(
+			'#type' => 'textfield',
+			'#default_value' => $person->preferred_title,
+			'#title' => t('Job Title'),
+			'#description' => t('Your preferred (job) title. If left blank, the default HR value - <em>' . $person->title . '</em> will be displayed.'),
+		);
 		$form['staff_data']['staff_keywords'] = array(
 			'#type' => 'textarea',
 			'#default_value' => $person->keywords,
@@ -318,6 +324,7 @@ function dul_staff_form_user_profile_form_alter(&$form, &$form_state) {
 		$form_state['staff_data']['profile_old'] = $person->profile;
 		$form_state['staff_data']['person_id'] = $person->id;
 		$form_state['staff_data']['keywords_old'] = $person->keywords;
+		$form_state['staff_data']['preferred_title_old'] = $person->preferred_title;
 		
 		$form['#submit'][] = 'dul_staff_staff_directory_submit';
 	}
@@ -334,6 +341,9 @@ function dul_staff_staff_directory_submit($form, &$form_state) {
 	}
 	if ($form_state['values']['staff_keywords'] != $form_state['staff_data']['keywords_old']) {
 		$merge_fields['keywords'] = $form_state['values']['staff_keywords'];
+	}
+	if ($form_state['values']['preferred_title'] != $form_state['staff_data']['preferred_title_old']) {
+		$merge_fields['preferred_title'] = $form_state['values']['preferred_title'];
 	}
 
 	if (count($merge_fields)) {
