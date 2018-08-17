@@ -453,6 +453,8 @@ function dul_staff_person_load($person_id) {
 
 	// replace " " spaces with "-" in the (main) phone number
 	$person->phone = str_replace(' ', '-', $person->phone);
+	$person->postal_address['office'] = str_replace('$', ', ', $person->postal_address['office']);
+
 	return $person;
 }
 
