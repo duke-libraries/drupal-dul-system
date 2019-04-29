@@ -173,6 +173,18 @@ function locguide_menu() {
 		'type' => MENU_CALLBACK,
 		'access callback' => TRUE,
 	);
+	$items['using/locationguide/barcode'] = array(
+		'page callback' => 'locguide_find_barcode',
+		'title' => 'Find Barcode',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,
+	);
+	$items['using/locationguide/find'] = array(
+		'page callback' => 'locguide_find_barcode_json',
+		'title' => 'Find Barcode',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,
+	);
 	$items['find/barcode/json'] = array(
 		'page callback' => 'locguide_find_barcode_json',
 		'title' => 'Find Barcode',
@@ -395,6 +407,8 @@ function locguide_find_barcode_json($barcode=FALSE) {
 	}
 	$callback = check_plain($_REQUEST['callback']);
 	
+	watchdog('locguide', $barcode);
+
 	$recordTitle = '';
 	if (isset($_REQUEST['recordTitle'])) {
 		$recordTitle = urldecode($_REQUEST['recordTitle']);
@@ -423,6 +437,7 @@ function locguide_find_barcode_json($barcode=FALSE) {
 	}
 
 	drupal_add_http_header('Content-type', 'application/json');
+	watchdog('locguide', $jsonOutput);
 	
 	if (isset($callback) && $callback != '') {
 		drupal_add_http_header('Content-type', 'application/javascript');
